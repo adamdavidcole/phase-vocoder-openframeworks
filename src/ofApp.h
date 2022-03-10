@@ -37,6 +37,7 @@ class ofApp : public ofBaseApp {
     ofxMaxiFFT fft;
     maxiOsc osc;
     maxiSample pianoSamp;
+    vector<maxiOsc> oscHarmonic;
     
     vector<float> constQ;
     vector<float> chroma;

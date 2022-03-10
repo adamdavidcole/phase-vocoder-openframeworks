@@ -78,6 +78,17 @@ void ofApp::update() {
         j++;
         if (j == 12) j = 0;
     }
+    
+    int maxChroma = -1;
+    int maxChromaIndex = 0;
+    for (int i = 0; i < chroma.size(); i++) {
+        if (chroma[i] > maxChroma) {
+            maxChroma = chroma[i];
+            maxChromaIndex = i;
+        }
+    }
+    
+    frequency = mtofArray[69 + maxChromaIndex];
 }
 
 //--------------------------------------------------------------
@@ -116,7 +127,7 @@ void ofApp::audioIn(float* buffer, int bufferSize, int nChannels) {
 //--------------------------------------------------------------
 void ofApp::audioOut(float* buffer, int bufferSize, int nChannels) {
     for (int i = 0; i < bufferSize; i++) {
-        float currentSample = 0; //pianoSamp.play(); //osc.sinewave(frequency);
+        float currentSample = osc.sinewave(frequency);
         
 //        fft.process(currentSample);
         
