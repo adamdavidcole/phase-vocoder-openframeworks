@@ -31,8 +31,14 @@ class ofApp : public ofBaseApp {
 
     int frequency;
     int fftSize;
+    int fftBins;
+    float binFreq;
     
     ofxMaxiFFT fft;
     maxiOsc osc;
+    maxiSample pianoSamp;
+    
+    vector<float> constQ;
+    vector<float> chroma;
 };
 
