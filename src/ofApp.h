@@ -3,6 +3,8 @@
 #include "ofMain.h"
 #include "ofxMaxim.h"
 #include "ofxGui.h"
+#include "CircularBuffer.hpp"
+#include "PhaseVocoder.hpp"
 
 class ofApp : public ofBaseApp {
    public:
@@ -28,6 +30,9 @@ class ofApp : public ofBaseApp {
     
     int bufferSize;
     int sampleRate;
+    
+    int windowSize;
+    int hopSize;
 
     int frequency;
     int fftSize;
@@ -41,5 +46,7 @@ class ofApp : public ofBaseApp {
     
     vector<float> constQ;
     vector<float> chroma;
+
+    PhaseVocoder phaseVocoder;
 };
 
