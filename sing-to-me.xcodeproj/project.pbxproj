@@ -37,6 +37,7 @@
 		B56FE57CC35806596D38118C /* ofxSliderGroup.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 802251BAF1B35B1D67B32FD0 /* ofxSliderGroup.cpp */; };
 		B85868A927DA7CA000657BF7 /* CircularBuffer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B85868A727DA7CA000657BF7 /* CircularBuffer.cpp */; };
 		B85868AC27DAB56000657BF7 /* PhaseVocoder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B85868AA27DAB56000657BF7 /* PhaseVocoder.cpp */; };
+		B85868AF27DBD0DE00657BF7 /* smpPitchShift.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B85868AD27DBD0DE00657BF7 /* smpPitchShift.cpp */; };
 		C4782ECC372420ACE0615B74 /* OscPrintReceivedElements.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BC8881B3C8C0A1C45F042E7A /* OscPrintReceivedElements.cpp */; };
 		E4B69E200A3A1BDC003C02F2 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E4B69E1D0A3A1BDC003C02F2 /* main.cpp */; };
 		E4B69E210A3A1BDC003C02F2 /* ofApp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E4B69E1E0A3A1BDC003C02F2 /* ofApp.cpp */; };
@@ -113,6 +114,8 @@
 		B85868A827DA7CA000657BF7 /* CircularBuffer.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = CircularBuffer.hpp; sourceTree = "<group>"; };
 		B85868AA27DAB56000657BF7 /* PhaseVocoder.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = PhaseVocoder.cpp; sourceTree = "<group>"; };
 		B85868AB27DAB56000657BF7 /* PhaseVocoder.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = PhaseVocoder.hpp; sourceTree = "<group>"; };
+		B85868AD27DBD0DE00657BF7 /* smpPitchShift.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = smpPitchShift.cpp; sourceTree = "<group>"; };
+		B85868AE27DBD0DE00657BF7 /* smpPitchShift.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = smpPitchShift.hpp; sourceTree = "<group>"; };
 		B87C60311EC1FE841C1ECD89 /* ofxLabel.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ofxLabel.h; path = ../../../addons/ofxGui/src/ofxLabel.h; sourceTree = SOURCE_ROOT; };
 		BA274EC7A169D538BD43A5D8 /* ofxGuiUtils.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ofxGuiUtils.h; path = ../../../addons/ofxGui/src/ofxGuiUtils.h; sourceTree = SOURCE_ROOT; };
 		BA5114869056DFF1A50CFA4A /* fft.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = fft.h; path = ../../../addons/ofxMaxim/libs/fft.h; sourceTree = SOURCE_ROOT; };
@@ -795,6 +798,8 @@
 				E4B69E1E0A3A1BDC003C02F2 /* ofApp.cpp */,
 				B85868AA27DAB56000657BF7 /* PhaseVocoder.cpp */,
 				B85868AB27DAB56000657BF7 /* PhaseVocoder.hpp */,
+				B85868AD27DBD0DE00657BF7 /* smpPitchShift.cpp */,
+				B85868AE27DBD0DE00657BF7 /* smpPitchShift.hpp */,
 				E4B69E1F0A3A1BDC003C02F2 /* ofApp.h */,
 				B85868A727DA7CA000657BF7 /* CircularBuffer.cpp */,
 				B85868A827DA7CA000657BF7 /* CircularBuffer.hpp */,
@@ -955,6 +960,7 @@
 				5864AD82E20F15536D054EA3 /* ofxOscMessage.cpp in Sources */,
 				4ADB88E2FB52E76A471065DE /* ofxOscParameterSync.cpp in Sources */,
 				640279EE111671BD026CB013 /* ofxOscReceiver.cpp in Sources */,
+				B85868AF27DBD0DE00657BF7 /* smpPitchShift.cpp in Sources */,
 				8F5205AEF8861EF234F0651A /* ofxOscSender.cpp in Sources */,
 				B85868A927DA7CA000657BF7 /* CircularBuffer.cpp in Sources */,
 			);

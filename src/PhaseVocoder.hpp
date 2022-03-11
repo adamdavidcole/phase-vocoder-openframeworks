@@ -38,6 +38,8 @@ public:
     
     void setPitchShift(float pitchShift);
 
+    float pitchShift;
+
 private:
     
     int fftSize;
@@ -68,7 +70,9 @@ private:
     
     WindowProcessor windowProcessor;
     
-    float pitchShift;
+    
+    float* indata;
+    float* outdata;
     
     
 };

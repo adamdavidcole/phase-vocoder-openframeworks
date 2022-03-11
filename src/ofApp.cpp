@@ -54,6 +54,12 @@ void ofApp::setup() {
         
     vector<float> window = testBuffer.getWindow(6);
     printFloatVector(window);
+    
+    recordedSamplesSize = sampleRate * 5;
+    recordedSamplesCount = 0;
+    recordedSamplesReadPoint = 0;
+    recordedSamples.resize(recordedSamplesSize);
+    isRecording = false;
 }
 
 //--------------------------------------------------------------
@@ -127,19 +133,33 @@ void ofApp::exit() {
 
 //--------------------------------------------------------------
 void ofApp::audioIn(float* buffer, int bufferSize, int nChannels) {
-    for (int i = 0; i < bufferSize; i++) {
-//        float currentSample = buffer[i];
-//        phaseVocoder.addSample(currentSample);
-//        if (fft.process(currentSample)) {
-//            cout << "new fft?" << endl;
-//        };
+    if (isRecording && recordedSamplesCount < recordedSamplesSize) {
+        for (int i = 0; i < bufferSize; i++) {
+            recordedSamples[recordedSamplesCount] = buffer[i];
+            recordedSamplesCount++;
+    //        float currentSample = buffer[i];
+    //        phaseVocoder.addSample(currentSample);
+    //        if (fft.process(currentSample)) {
+    //            cout << "new fft?" << endl;
+    //        };
+        }
     }
 }
 
 //--------------------------------------------------------------
 void ofApp::audioOut(float* buffer, int bufferSize, int nChannels) {
     for (int i = 0; i < bufferSize; i++) {
-        float sample = pianoSamp.play();
+        float sample = 0;
+        
+        if (!isRecording && recordedSamplesCount > bufferSize) {
+            sample = recordedSamples[recordedSamplesReadPoint];
+            
+            recordedSamplesReadPoint += 1;
+            if (recordedSamplesReadPoint >= recordedSamplesCount) {
+                recordedSamplesReadPoint = 0;
+            }
+        }
+//        float sample = pianoSamp.play();
 //        float sample = osc.sinewave(frequency);
         phaseVocoder.addSample(sample);
 
@@ -153,16 +173,52 @@ void ofApp::audioOut(float* buffer, int bufferSize, int nChannels) {
 }
 
 //--------------------------------------------------------------
-void ofApp::keyPressed(int key) {}
+void ofApp::keyPressed(int key) {
+    if (key == ' ' && !isRecording) {
+        cout << "Begin recording" << endl;
+        recordedSamplesCount = 0;
+        recordedSamplesReadPoint = 0;
+        isRecording = true;
+    }
+    
+    if (key == '1') {
+        phaseVocoder.setPitchShift(0);
+    }
+    if (key == '2') {
+        phaseVocoder.setPitchShift(pow(2, 1));
+    }
+    if (key == '3') {
+        phaseVocoder.setPitchShift(pow(2, 2));
+    }
+    if (key == '4') {
+        phaseVocoder.setPitchShift(pow(2, 3));
+    }
+    if (key == '5') {
+        phaseVocoder.setPitchShift(0.5);
+    }
+    if (key == '6') {
+        phaseVocoder.setPitchShift(0.25);
+    }
+//    if (phaseVocoder.pitchShift > 0) {
+//        phaseVocoder.setPitchShift(0);
+//    } else {
+//        phaseVocoder.setPitchShift(2);
+//    }
+}
 
 //--------------------------------------------------------------
-void ofApp::keyReleased(int key) {}
+void ofApp::keyReleased(int key) {
+    if (key == ' ') {
+        cout << "End recording" << endl;
+        isRecording = false;
+    }
+}
 
 //--------------------------------------------------------------
 void ofApp::mouseMoved(int x, int y) {
-//    frequency = ofMap(x, 0, ofGetWidth(), 10, 22000);
-    float pitchShift = ofClamp(ofMap(x, 0, ofGetWidth(), 0, 4), 0, 4);
-    phaseVocoder.setPitchShift(pitchShift);
+    frequency = ofMap(x, 0, ofGetWidth(), 10, 22000);
+//    float pitchShift = ofClamp(ofMap(x, 0, ofGetWidth(), 0, 4), 0, 4);
+//    phaseVocoder.setPitchShift(pitchShift);
 }
 
 //--------------------------------------------------------------
