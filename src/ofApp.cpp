@@ -17,7 +17,7 @@ void ofApp::setup() {
     bufferSize = 512;
     sampleRate = 44100;
     
-    frequency = 440;
+    frequency = 430.66;
     
     ofxMaxiSettings::setup(sampleRate, 2, bufferSize);
     
@@ -25,8 +25,8 @@ void ofApp::setup() {
     fftBins = fftSize / 2;
     binFreq = sampleRate / fftSize;
     
-    windowSize = bufferSize / 2;
-    hopSize = windowSize / 2;
+    windowSize = fftSize;
+    hopSize = 128;
     
     phaseVocoder.setup(fftSize, windowSize, hopSize);
 //
@@ -103,6 +103,11 @@ void ofApp::draw() {
         ofDrawRectangle(x, ofGetHeight() / 2, bandWidth, -fftMagnitude);
     }
     
+    ofDrawBitmapString("Bin: " + to_string(phaseVocoder.calculationsForGui[0]), 100, 100);
+    ofDrawBitmapString("Oscillator frequency: " + to_string(frequency), 100, 120);
+    ofDrawBitmapString("Calculated frequency: " + to_string(phaseVocoder.calculationsForGui[1]), 100, 140);
+    ofDrawBitmapString("Error: " + to_string(abs(phaseVocoder.calculationsForGui[1] - frequency)), 100, 160);
+
 //    CHROMAGRAM
 //    float chromaWidth = ofGetWidth() / chroma.size();
 //    for (int i = 0; i < chroma.size(); i++) {

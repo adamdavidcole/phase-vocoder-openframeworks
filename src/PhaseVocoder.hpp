@@ -33,6 +33,7 @@ public:
     void processWindow();
 
     ofxMaxiFFT fft;
+    vector<float> calculationsForGui;
 
 private:
     
@@ -42,6 +43,15 @@ private:
     
     CircularBuffer* inputBuffer;
     CircularBuffer* outputBuffer;
+    
+    // hold the phases from the previous hop of input samples
+    vector<float> lastInputPhases;
+    // These containers hold the converted representations from magnitude-phase
+    // to magnitude-frequency, used for pitch shifting
+    vector<float> analysisMagnitudes;
+    vector<float> analysisFrequencies;
+    // Hann window values
+    vector<float> analysisWindowBuffer;
     
     vector<float> nextWindowToProcess;
     

@@ -34,7 +34,7 @@ class ofApp : public ofBaseApp {
     int windowSize;
     int hopSize;
 
-    int frequency;
+    float frequency;
     int fftSize;
     int fftBins;
     float binFreq;
