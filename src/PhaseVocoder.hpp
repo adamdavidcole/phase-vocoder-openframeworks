@@ -9,25 +9,45 @@
 #define PhaseVocoder_hpp
 
 #include <stdio.h>
+#include "ofMain.h"
 #include "ofxMaxim.h"
 #include "CircularBuffer.hpp"
 
+class PhaseVocoder;
+
+class WindowProcessor : public ofThread {
+public:
+    void setup(PhaseVocoder* _phaseVocoder);
+    void threadedFunction();
+    
+    PhaseVocoder* phaseVocoder;
+};
+
+
 class PhaseVocoder {
 public:
-    void setup(int windowSize, int hopSize);
+    ~PhaseVocoder();
+    void setup(int fftSize, int windowSize, int hopSize);
     void addSample(float sample);
     float readSample();
+    void processWindow();
+
+    ofxMaxiFFT fft;
 
 private:
-    ofxMaxiFFT fft;
     
+    int fftSize;
     int windowSize;
     int hopSize;
     
-    CircularBuffer inputBuffer;
-    CircularBuffer outputBuffer;
+    CircularBuffer* inputBuffer;
+    CircularBuffer* outputBuffer;
     
-    void processWindow();
+    vector<float> nextWindowToProcess;
+    
+    WindowProcessor windowProcessor;
+    
+    
 };
 
 #endif /* PhaseVocoder_hpp */

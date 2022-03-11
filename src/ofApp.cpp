@@ -28,12 +28,10 @@ void ofApp::setup() {
     windowSize = bufferSize / 2;
     hopSize = windowSize / 2;
     
-    phaseVocoder.setup(windowSize, hopSize);
-    
-    fft.setup(fftSize, windowSize, hopSize);
-    
-    constQ.resize(128);
-    chroma.resize(12);
+    phaseVocoder.setup(fftSize, windowSize, hopSize);
+//
+//    constQ.resize(128);
+//    chroma.resize(12);
 
     ofSoundStreamSetup(2, 1, this, sampleRate, bufferSize, 4);
     
@@ -57,75 +55,47 @@ void ofApp::setup() {
 
 //--------------------------------------------------------------
 void ofApp::update() {
-//    var currentBin = 0;
-//        for (var i = 0; i < 128; i++) {
-//            constQ[i] = 0;
-//            for (var n = currentBin; n < fftSize / 2; n++) {
-//                var handler = (mtofArray[i+1]-mtofArray[i])/2;
-//                if (binFreq * n > mtofArray[i]-handler && binFreq * n < mtofArray[i + 1]-handler) {
-//                    constQ[i] += fft.getMagnitude(n);
-//                    currentBin++;
-//                }
+
+    // CHROMAGRAM!
+//    int currentBin = 0;
+//    int fftBins = fftSize / 2;
+//    for (int i = 0; i < constQ.size(); i++) {
+//        constQ[i] = 0;
 //
+//        for (int n = currentBin; n < fftBins; n++) {
+//            float handler =(mtofArray[i+1] - mtofArray[i])/2.f;
+//            if (binFreq * n > mtofArray[i] - handler && binFreq * n < mtofArray[i+1] - handler) {
+//                constQ[i] += fft.magnitudes[n];
+//                currentBin++;
 //            }
-//
 //        }
-    int currentBin = 0;
-    int fftBins = fftSize / 2;
-    for (int i = 0; i < constQ.size(); i++) {
-        constQ[i] = 0;
-        
-        for (int n = currentBin; n < fftBins; n++) {
-            float handler =(mtofArray[i+1] - mtofArray[i])/2.f;
-            if (binFreq * n > mtofArray[i] - handler && binFreq * n < mtofArray[i+1] - handler) {
-                constQ[i] += fft.magnitudes[n];
-                currentBin++;
-            }
-        }
-    }
-    
-//    for (var i=0;i<12;i++) {
-//
-//      chroma[i]=0;
-//
 //    }
 //
-//    //Rotate through the constant Q feature, dropping everything in to 12 bins
-//    var j=0;
-//    // Really no point starting lower down.
-//    for (var i=0;i<128;i++) {
-//        chroma[j]+=Math.sqrt(constQ[i]);
+//    for (int i = 0; i < chroma.size(); i++) {
+//        chroma[i] = 0;
+//    }
+//
+//    int j = 0;
+//    for (int i = 0; i < constQ.size(); i++) {
+//        chroma[j] += sqrt(constQ[i]);
 //        j++;
-//        if (j==12) j=0;
+//        if (j == 12) j = 0;
 //    }
-    for (int i = 0; i < chroma.size(); i++) {
-        chroma[i] = 0;
-    }
-    
-    int j = 0;
-    for (int i = 0; i < constQ.size(); i++) {
-        chroma[j] += sqrt(constQ[i]);
-        j++;
-        if (j == 12) j = 0;
-    }
-    
-    int maxChroma = -1;
-    int maxChromaIndex = 0;
-    for (int i = 0; i < chroma.size(); i++) {
-        if (chroma[i] > maxChroma) {
-            maxChroma = chroma[i];
-            maxChromaIndex = i;
-        }
-    }
-    
-    frequency = mtofArray[69 + maxChromaIndex];
+//
+//    int maxChroma = -1;
+//    int maxChromaIndex = 0;
+//    for (int i = 0; i < chroma.size(); i++) {
+//        if (chroma[i] > maxChroma) {
+//            maxChroma = chroma[i];
+//            maxChromaIndex = i;
+//        }
+//    }
 }
 
 //--------------------------------------------------------------
 void ofApp::draw() {
-    int fftBins = fftSize / 2;
     float bandWidth = ofGetWidth()/ (float)fftBins;
-    float* magnitudes = fft.magnitudes;
+    float* magnitudes = phaseVocoder.fft.magnitudes;
     
     for (int i = 0; i < fftBins; i++) {
         float fftMagnitude = magnitudes[i];
@@ -133,12 +103,13 @@ void ofApp::draw() {
         ofDrawRectangle(x, ofGetHeight() / 2, bandWidth, -fftMagnitude);
     }
     
-    float chromaWidth = ofGetWidth() / chroma.size();
-    for (int i = 0; i < chroma.size(); i++) {
-        float chromaMagnitude = chroma[i];
-        float x = i * chromaWidth;
-        ofDrawRectangle(x, ofGetHeight(), chromaWidth, -chromaMagnitude * 10.0);
-    }
+//    CHROMAGRAM
+//    float chromaWidth = ofGetWidth() / chroma.size();
+//    for (int i = 0; i < chroma.size(); i++) {
+//        float chromaMagnitude = chroma[i];
+//        float x = i * chromaWidth;
+//        ofDrawRectangle(x, ofGetHeight(), chromaWidth, -chromaMagnitude * 10.0);
+//    }
 }
 
 //--------------------------------------------------------------
@@ -159,7 +130,8 @@ void ofApp::audioIn(float* buffer, int bufferSize, int nChannels) {
 //--------------------------------------------------------------
 void ofApp::audioOut(float* buffer, int bufferSize, int nChannels) {
     for (int i = 0; i < bufferSize; i++) {
-        float sample = pianoSamp.play();
+//        float sample = pianoSamp.play();
+        float sample = osc.sinewave(frequency);
         phaseVocoder.addSample(sample);
 
         float currentSample = phaseVocoder.readSample();
@@ -179,7 +151,7 @@ void ofApp::keyReleased(int key) {}
 
 //--------------------------------------------------------------
 void ofApp::mouseMoved(int x, int y) {
-    frequency = ofMap(x, 0, ofGetWidth(), 10, 4000);
+    frequency = ofMap(x, 0, ofGetWidth(), 10, 22000);
 }
 
 //--------------------------------------------------------------

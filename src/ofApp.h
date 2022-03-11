@@ -39,13 +39,11 @@ class ofApp : public ofBaseApp {
     int fftBins;
     float binFreq;
     
-    ofxMaxiFFT fft;
     maxiOsc osc;
     maxiSample pianoSamp;
-    vector<maxiOsc> oscHarmonic;
-    
-    vector<float> constQ;
-    vector<float> chroma;
+//
+//    vector<float> constQ;
+//    vector<float> chroma;
 
     PhaseVocoder phaseVocoder;
 };
