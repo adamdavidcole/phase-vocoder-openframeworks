@@ -33,7 +33,10 @@ public:
     void processWindow();
 
     ofxMaxiFFT fft;
+    ofxMaxiIFFT ifft;
     vector<float> calculationsForGui;
+    
+    void setPitchShift(float pitchShift);
 
 private:
     
@@ -46,16 +49,26 @@ private:
     
     // hold the phases from the previous hop of input samples
     vector<float> lastInputPhases;
+    vector<float> lastOutputPhases;
+    
     // These containers hold the converted representations from magnitude-phase
     // to magnitude-frequency, used for pitch shifting
     vector<float> analysisMagnitudes;
     vector<float> analysisFrequencies;
+    
+//    vector<float> synthesisMagnitudes;
+    vector<float> synthesisFrequencies;
+    float* synthesisMagnitudes;
+    float* synthesisPhases;
+    
     // Hann window values
     vector<float> analysisWindowBuffer;
     
     vector<float> nextWindowToProcess;
     
     WindowProcessor windowProcessor;
+    
+    float pitchShift;
     
     
 };

@@ -20,10 +20,11 @@ void WindowProcessor::threadedFunction() {
 PhaseVocoder::~PhaseVocoder() {
     delete inputBuffer;
     delete outputBuffer;
+    delete[] synthesisMagnitudes;
+    delete[] synthesisPhases;
 }
 
 void PhaseVocoder::setup(int _fftSize, int _windowSize, int _hopSize) {
-    
     fftSize = _fftSize;
     windowSize = _windowSize;
     hopSize = _hopSize;
@@ -38,8 +39,14 @@ void PhaseVocoder::setup(int _fftSize, int _windowSize, int _hopSize) {
     outputBuffer->shiftReadPoint(-windowSize);
     
     lastInputPhases.resize(fftSize);
+    lastOutputPhases.resize(fftSize);
     analysisMagnitudes.resize(fftSize / 2 + 1);
     analysisFrequencies.resize(fftSize / 2 + 1);
+    
+//    synthesisMagnitudes.resize(fftSize / 2 + 1);
+    synthesisFrequencies.resize(fftSize);
+    synthesisMagnitudes = new float[fftSize];
+    synthesisPhases = new float[fftSize];
     
     analysisWindowBuffer.resize(windowSize);
     for (int i = 0; i < windowSize; i++) {
@@ -49,8 +56,11 @@ void PhaseVocoder::setup(int _fftSize, int _windowSize, int _hopSize) {
     windowProcessor.setup(this);
 
     fft.setup(fftSize, windowSize, windowSize);
+    ifft.setup(fftSize, windowSize, windowSize);
     
     calculationsForGui.resize(2);
+    
+    pitchShift = 2;
 }
 
 void PhaseVocoder::addSample(float sample) {
@@ -88,6 +98,7 @@ void PhaseVocoder::processWindow() {
         fft.process(window[i] * analysisWindowBuffer[i]);
     }
     
+    // block based processing ->
     float* amplitudes = fft.magnitudes;
     float* phases = fft.phases;
     
@@ -121,15 +132,73 @@ void PhaseVocoder::processWindow() {
         calculationsForGui[1] = analysisFrequencies[maxBinIndex] * 44100 / (float) fftSize;
     }
     
-    // block based processing ->
-    
     // IFTT
+    // clean synthesis arrays
+    for (int i = 0; i < fftSize; i++) {
+        synthesisMagnitudes[i] = 0;
+        synthesisPhases[i] = 0;
+        synthesisFrequencies[i] = 0;
+    }
+    
+    // robotization
+//    for (int i = 0; i < fftSize; i++) {
+//        synthesisMagnitudes[i] = fft.magnitudes[i];
+//        synthesisPhases[i] = 0;
+//
+//    }
+//
+//    // whisperization
+//    for (int i = 0; i < fftSize; i++) {
+//        synthesisMagnitudes[i] = fft.magnitudes[i];
+//        synthesisPhases[i] = ofRandom(0, TWO_PI);
+//    }
+    
+    // pitch shift
+    for (int n = 0; n < fftSize / 2; n++) {
+        int newBin = floorf(n * pitchShift + 0.5);
+        
+        if (newBin <= fftSize / 2) {
+            synthesisMagnitudes[newBin] += analysisMagnitudes[n];
+            synthesisFrequencies[newBin] += analysisFrequencies[n] * pitchShift;
+        }
+        
+        float amplitude = synthesisMagnitudes[n];
+        float binDeviation = synthesisFrequencies[n] - n;
+        float phaseDiff = binDeviation * TWO_PI * (float) hopSize / (float) fftSize;
+
+        float binCenterFrequency = TWO_PI * (float) n / (float) fftSize;
+        phaseDiff += binCenterFrequency * hopSize;
+
+        float outPhase = wrapPhase(lastOutputPhases[n] + phaseDiff);
+        synthesisPhases[n] = outPhase;
+        lastOutputPhases[n] = outPhase;
+
+        if (n > 0 && n < fftSize / 2) {
+            float realComponent = amplitude * cosf(outPhase);
+            float imaginaryComponent = -amplitude * sinf(outPhase);
+
+            synthesisMagnitudes[n + fftSize/2] = amplitude;
+            synthesisPhases[n + fftSize/2] = phases[n];
+        }
+    }
+    
+    vector<float> outputWindow(windowSize);
+    
+    for (int i = 0; i < fftSize; i++) {
+//        float sample = ifft.process(synthesisMagnitudes, synthesisPhases);
+        float sample = ifft.process(fft.magnitudes, fft.phases);
+        outputWindow[i] = sample;
+    }
 
     // write to output buffer
     for (int i = 0; i < window.size(); i++) {
-        float windowSample = window[i];
+        float windowSample = outputWindow[i] * analysisWindowBuffer[i];
         outputBuffer->add(windowSample);
     }
 
     outputBuffer->shiftWritePoint(-windowSize + hopSize);
+}
+
+void PhaseVocoder::setPitchShift(float _pitchShift) {
+    pitchShift = _pitchShift;
 }

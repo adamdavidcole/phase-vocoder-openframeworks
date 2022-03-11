@@ -12,7 +12,10 @@ void printFloatVector(vector<float> vec) {
 
 //--------------------------------------------------------------
 void ofApp::setup() {
+//    pianoSamp.load(ofToDataPath("piano-chrom.wav"));
+//    pianoSamp.load(ofToDataPath("test-sound.wav"));
     pianoSamp.load(ofToDataPath("caine_03.wav"));
+
     
     bufferSize = 512;
     sampleRate = 44100;
@@ -26,7 +29,7 @@ void ofApp::setup() {
     binFreq = sampleRate / fftSize;
     
     windowSize = fftSize;
-    hopSize = 128;
+    hopSize = windowSize / 4;
     
     phaseVocoder.setup(fftSize, windowSize, hopSize);
 //
@@ -126,6 +129,7 @@ void ofApp::exit() {
 void ofApp::audioIn(float* buffer, int bufferSize, int nChannels) {
     for (int i = 0; i < bufferSize; i++) {
 //        float currentSample = buffer[i];
+//        phaseVocoder.addSample(currentSample);
 //        if (fft.process(currentSample)) {
 //            cout << "new fft?" << endl;
 //        };
@@ -135,13 +139,13 @@ void ofApp::audioIn(float* buffer, int bufferSize, int nChannels) {
 //--------------------------------------------------------------
 void ofApp::audioOut(float* buffer, int bufferSize, int nChannels) {
     for (int i = 0; i < bufferSize; i++) {
-//        float sample = pianoSamp.play();
-        float sample = osc.sinewave(frequency);
+        float sample = pianoSamp.play();
+//        float sample = osc.sinewave(frequency);
         phaseVocoder.addSample(sample);
 
         float currentSample = phaseVocoder.readSample();
         
-        currentSample *= 0.05;
+        currentSample *= 0.5;
 
         buffer[i * nChannels + 0] = currentSample;
         buffer[i * nChannels + 1] = currentSample;
@@ -156,7 +160,9 @@ void ofApp::keyReleased(int key) {}
 
 //--------------------------------------------------------------
 void ofApp::mouseMoved(int x, int y) {
-    frequency = ofMap(x, 0, ofGetWidth(), 10, 22000);
+//    frequency = ofMap(x, 0, ofGetWidth(), 10, 22000);
+    float pitchShift = ofClamp(ofMap(x, 0, ofGetWidth(), 0, 4), 0, 4);
+    phaseVocoder.setPitchShift(pitchShift);
 }
 
 //--------------------------------------------------------------
