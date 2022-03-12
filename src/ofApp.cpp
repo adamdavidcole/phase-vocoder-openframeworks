@@ -14,7 +14,7 @@ void printFloatVector(vector<float> vec) {
 void ofApp::setup() {
 //    pianoSamp.load(ofToDataPath("piano-chrom.wav"));
 //    pianoSamp.load(ofToDataPath("test-sound.wav"));
-    pianoSamp.load(ofToDataPath("caine_03.wav"));
+    pianoSamp.load(ofToDataPath("test-sound.wav"));
 
     
     bufferSize = 512;
@@ -108,9 +108,7 @@ void ofApp::draw() {
     int fft2Bins = phaseVocoder.fft2->getBinSize();
     float bandWidth = ofGetWidth()/ (float)fft2Bins;
     float* magnitudes = phaseVocoder.curFftAmplitudes;
-    
-    cout << fft2Bins << endl;
-    
+        
     for (int i = 0; i < fft2Bins; i++) {
         float fftMagnitude = magnitudes[i] * 100;
         float x = i * bandWidth;
@@ -154,17 +152,17 @@ void ofApp::audioIn(float* buffer, int bufferSize, int nChannels) {
 //--------------------------------------------------------------
 void ofApp::audioOut(float* buffer, int bufferSize, int nChannels) {
     for (int i = 0; i < bufferSize; i++) {
-        float sample = 0;
-
-        if (!isRecording && recordedSamplesCount > bufferSize) {
-            sample = recordedSamples[recordedSamplesReadPoint];
-
-            recordedSamplesReadPoint += 1;
-            if (recordedSamplesReadPoint >= recordedSamplesCount) {
-                recordedSamplesReadPoint = 0;
-            }
-        }
-//        float sample = pianoSamp.play();
+//        float sample = 0;
+//
+//        if (!isRecording && recordedSamplesCount > bufferSize) {
+//            sample = recordedSamples[recordedSamplesReadPoint];
+//
+//            recordedSamplesReadPoint += 1;
+//            if (recordedSamplesReadPoint >= recordedSamplesCount) {
+//                recordedSamplesReadPoint = 0;
+//            }
+//        }
+        float sample = pianoSamp.play();
 //        float sample = osc.sinewave(frequency);
         phaseVocoder.addSample(sample);
 
@@ -187,23 +185,30 @@ void ofApp::keyPressed(int key) {
     }
     
     if (key == '1') {
-        phaseVocoder.setPitchShift(0);
+        phaseVocoder.setPitchShift(powf(2.0, -12.0 / 12.0));
     }
     if (key == '2') {
-        phaseVocoder.setPitchShift(pow(2, 1));
+        phaseVocoder.setPitchShift(powf(2.0, -6.0 / 12.0));
     }
     if (key == '3') {
-        phaseVocoder.setPitchShift(pow(2, 2));
+        phaseVocoder.setPitchShift(powf(2.0, -3.0 / 12.0));
     }
     if (key == '4') {
-        phaseVocoder.setPitchShift(pow(2, 3));
+        phaseVocoder.setPitchShift(powf(2.0, 0.0 / 12.0));
     }
     if (key == '5') {
-        phaseVocoder.setPitchShift(0.5);
+        phaseVocoder.setPitchShift(powf(2.0, 3.0 / 12.0));
     }
     if (key == '6') {
-        phaseVocoder.setPitchShift(0.25);
+        phaseVocoder.setPitchShift(powf(2.0, 6.0 / 12.0));
     }
+    if (key == '7') {
+        phaseVocoder.setPitchShift(powf(2.0, 9.0 / 12.0));
+    }
+    if (key == '8') {
+        phaseVocoder.setPitchShift(powf(2.0, 12.0 / 12.0));
+    }
+   
 //    if (phaseVocoder.pitchShift > 0) {
 //        phaseVocoder.setPitchShift(0);
 //    } else {

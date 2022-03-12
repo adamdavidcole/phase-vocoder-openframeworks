@@ -77,6 +77,10 @@ private:
     float* indata;
     float* outdata;
     
+    float* real;
+    float* imaginary;
+    
+    vector<float> binFrequencies;
     
 };
 
