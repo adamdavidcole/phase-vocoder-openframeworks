@@ -161,23 +161,23 @@ void ofApp::audioIn(float* buffer, int bufferSize, int nChannels) {
 //--------------------------------------------------------------
 void ofApp::audioOut(float* buffer, int bufferSize, int nChannels) {
     for (int i = 0; i < bufferSize; i++) {
-//        float sample = 0;
-//
-//        if (!isRecording && recordedSamplesCount > bufferSize) {
-//            sample = recordedSamples[recordedSamplesReadPoint];
-//
-//            recordedSamplesReadPoint += 1;
-//            if (recordedSamplesReadPoint >= recordedSamplesCount) {
-//                recordedSamplesReadPoint = 0;
-//            }
-//        }
-        float sample = pianoSamp.play();
+        float sample = 0;
+
+        if (!isRecording && recordedSamplesCount > bufferSize) {
+            sample = recordedSamples[recordedSamplesReadPoint];
+
+            recordedSamplesReadPoint += 1;
+            if (recordedSamplesReadPoint >= recordedSamplesCount) {
+                recordedSamplesReadPoint = 0;
+            }
+        }
+//        float sample = pianoSamp.play();
 //        float sample = osc.sinewave(frequency);
         phaseVocoder.addSample(sample);
 
         float currentSample = phaseVocoder.readSample();
-        
-        currentSample *= 0.05;
+//        currentSample = delayLine.dl(currentSample, 8000, 0.3);
+//        currentSample *= 0.05;
 
         buffer[i * nChannels + 0] = currentSample;
         buffer[i * nChannels + 1] = currentSample;
@@ -236,9 +236,13 @@ void ofApp::keyReleased(int key) {
 //--------------------------------------------------------------
 void ofApp::mouseMoved(int x, int y) {
 //    frequency = ofMap(x, 0, ofGetWidth(), 10, 22000);
-    float pitchShiftFactor = ofMap(x, 0, ofGetWidth(), -12, 12);
-    float pitchShift = powf(2.0, pitchShiftFactor / 12.0);
-    phaseVocoder.setPitchShift(pitchShift);
+
+//    float pitchShiftFactor = ofMap(x, 0, ofGetWidth(), -12, 12);
+//    float pitchShift = powf(2.0, pitchShiftFactor / 12.0);
+//    phaseVocoder.setPitchShift(pitchShift);
+
+    int pitchCount = (int) ofMap(x, 0, ofGetWidth(), 1, 20);
+    phaseVocoder.pitchCount = pitchCount;
 //    channelMix = ofMap(y, 0, ofGetHeight(), 1, 0);
 }
 

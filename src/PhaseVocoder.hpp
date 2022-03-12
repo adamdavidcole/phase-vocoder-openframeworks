@@ -40,6 +40,8 @@ public:
     ofxFft* fft;
     float* signalFftAmplitudes;
     float* processedFftAmplitudes;
+    
+    int pitchCount;
 private:
     
     int fftSize;

@@ -54,5 +54,7 @@ class ofApp : public ofBaseApp {
     bool isRecording;
     
     float channelMix;
+    
+    maxiDelayline delayLine;
 };
 

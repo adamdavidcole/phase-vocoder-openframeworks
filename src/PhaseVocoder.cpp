@@ -62,9 +62,8 @@ void PhaseVocoder::setup(int _fftSize, int _windowSize, int _hopSize) {
 
     fft = ofxFft::create(windowSize, OF_FFT_WINDOW_HAMMING);
     
-    
     pitchShift = powf(2.0, 3.0 / 12.0);
-    
+    pitchCount = 3;
     
     signalFftAmplitudes = new float[windowSize];
     processedFftAmplitudes = new float[windowSize];
@@ -98,6 +97,8 @@ float wrapPhase(float phaseIn) {
 void PhaseVocoder::processWindow() {
     // buffer of samples to process
     vector<float> window = nextWindowToProcess;
+    vector<float> outputWindow(windowSize);
+    
     // apply window function to signal
     for (int i = 0; i < windowSize; i++) {
         window[i] = window[i] * analysisWindowBuffer[i];
@@ -113,20 +114,30 @@ void PhaseVocoder::processWindow() {
     }
     
     // DO BLOCK PROCESSING
-    processBlock(amplitudes, phases);
-    
-    for (int i = 0; i < fftSize / 2; i++) {
-        processedFftAmplitudes[i] = amplitudes[i];
+    cout << pitchCount << endl;
+    for (int k = 0; k < pitchCount; k++) {
+        float pitchShiftFactor = ofMap(k, 0, pitchCount, 0, pitchCount * 2);
+        pitchShift = powf(2.0, pitchShiftFactor / 12.0);
+        
+        processBlock(amplitudes, phases);
+        
+//        for (int i = 0; i < fftSize / 2; i++) {
+//            processedFftAmplitudes[i] = amplitudes[i];
+//        }
+        
+        // execute the reverse FFT
+        fft->setPolar(amplitudes, phases);
+        float* ifftSignal = fft->getSignal();
+        
+        for (int i = 0; i < windowSize / 2; i++) {
+            outputWindow[i] += ifftSignal[i];
+        }
     }
-    
-    // execute the reverse FFT
-    fft->setPolar(amplitudes, phases);
-    float* ifftSignal = fft->getSignal();
 
    // write to output buffer
     for (int i = 0; i < window.size(); i++) {
         // apply the window function befroe writing to output
-        float windowSample = ifftSignal[i] * analysisWindowBuffer[i];
+        float windowSample = (outputWindow[i]/(float)pitchCount) * analysisWindowBuffer[i];
         outputBuffer->add(windowSample);
     }
 
