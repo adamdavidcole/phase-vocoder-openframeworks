@@ -114,9 +114,10 @@ void PhaseVocoder::processWindow() {
     }
     
     // DO BLOCK PROCESSING
-    cout << pitchCount << endl;
+    int pitchCount = ofMap(ofGetMouseY(), 0, ofGetHeight(), 20, 1);
+    float pitchShiftDistance = ofMap(ofGetMouseX(), 0, ofGetWidth(), 0, 36);
     for (int k = 0; k < pitchCount; k++) {
-        float pitchShiftFactor = ofMap(k, 0, pitchCount, 0, pitchCount * 2);
+        float pitchShiftFactor = k * pitchShiftDistance;
         pitchShift = powf(2.0, pitchShiftFactor / 12.0);
         
         processBlock(amplitudes, phases);
