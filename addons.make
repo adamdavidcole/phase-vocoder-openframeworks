@@ -1,3 +1,4 @@
+ofxFft
 ofxGui
 ofxMaxim
 ofxOsc

@@ -26,6 +26,7 @@ PhaseVocoder::~PhaseVocoder() {
     
     delete[] indata;
     delete[] outdata;
+    delete[] curFftAmplitudes;
 }
 
 void PhaseVocoder::setup(int _fftSize, int _windowSize, int _hopSize) {
@@ -62,6 +63,8 @@ void PhaseVocoder::setup(int _fftSize, int _windowSize, int _hopSize) {
     fft.setup(fftSize, windowSize, windowSize);
     ifft.setup(fftSize, windowSize, windowSize);
     
+    fft2 = ofxFft::create(windowSize, OF_FFT_WINDOW_HAMMING);
+    
     calculationsForGui.resize(2);
     
     pitchShift = 0.5;
@@ -72,6 +75,8 @@ void PhaseVocoder::setup(int _fftSize, int _windowSize, int _hopSize) {
         indata[i] = 0;
         outdata[i] = 0;
     }
+    
+    curFftAmplitudes = new float[windowSize];
 }
 
 void PhaseVocoder::addSample(float sample) {
@@ -103,9 +108,24 @@ void PhaseVocoder::processWindow() {
     
     // buffer of samples to process
     vector<float> window = nextWindowToProcess;
-    for (int i = 0; i < windowSize; i++) {
-        indata[i] = window[i];
+    
+    fft2->setSignal(window);
+    float* amplitudes = fft2->getAmplitude();
+    float* phases = fft2->getPhase();
+    
+    for (int i = 0; i < fftSize / 2; i++) {
+        curFftAmplitudes[i] = amplitudes[i];
+//        phases[i] = 0;
     }
+    
+    
+    
+    fft2->setPolar(amplitudes, phases);
+    float* ifftSignal = fft2->getSignal();
+    std::cout << to_string(fft2->getSignalSize()) << std::endl;
+//    for (int i = 0; i < windowSize; i++) {
+//        indata[i] = window[i];
+//    }
     
 //    smbPitchShift(pitchShift, windowSize, fftSize, hopSize, 44100, indata, outdata);
     
@@ -116,55 +136,55 @@ void PhaseVocoder::processWindow() {
 //    // Apply window function
 //
 //    // FFT ->
-    for (int i = 0; i < window.size(); i++) {
-        fft.process(window[i] * analysisWindowBuffer[i]);
-    }
-
-    // block based processing ->
-    float* amplitudes = fft.magnitudes;
-    float* phases = fft.phases;
-    
-    float* synthMag = new float[fftSize];
-    float* synthAmp = new float[fftSize];
-    
+//    for (int i = 0; i < window.size(); i++) {
+//        fft.process(window[i]);
+//    }
 //
-    for (int n = 0; n < fftSize / 2; n++) {
-        float amplitude = amplitudes[n];
-        float phase = phases[n];
+//    // block based processing ->
+//    float* amplitudes = fft.magnitudes;
+//    float* phases = fft.phases;
 
-
-        // calculate the phase difference between this hop and the previous one
-        float phaseDiff = phase - lastInputPhases[n];
-
-        float binCenterFrequency = TWO_PI * (float) n / (float) fftSize;
-        phaseDiff = wrapPhase(phaseDiff - binCenterFrequency * hopSize);
-
-//        float binDeviation = (phaseDiff / TWO_PI) / (float)hopSize;
-//        float binDeviation = phaseDiff / hopSize;
-//        float binDeviation = ofMap(phaseDiff, -M_PI, M_PI, -0.5, 0.5);
-        float binDeviation = phaseDiff / (hopSize * TWO_PI);
-
-        analysisFrequencies[n] = (float)n + binDeviation;
-        analysisMagnitudes[n] = amplitude;
-
-        lastInputPhases[n] = phase;
-
-        if (amplitude > maxBinValue) {
-            maxBinValue = amplitude;
-            maxBinIndex = n;
-        }
-
-        calculationsForGui[0] = (float) maxBinIndex;
-        calculationsForGui[1] = analysisFrequencies[maxBinIndex] * 44100 / (float) fftSize;
-    }
+//    float* synthMag = new float[fftSize];
+//    float* synthAmp = new float[fftSize];
 //
-//    // IFTT
-//    // clean synthesis arrays
-    for (int i = 0; i < fftSize; i++) {
-        synthesisMagnitudes[i] = 0;
-        synthesisPhases[i] = 0;
-        synthesisFrequencies[i] = 0;
-    }
+////
+//    for (int n = 0; n < fftSize / 2; n++) {
+//        float amplitude = amplitudes[n];
+//        float phase = phases[n];
+//
+//
+//        // calculate the phase difference between this hop and the previous one
+//        float phaseDiff = phase - lastInputPhases[n];
+//
+//        float binCenterFrequency = TWO_PI * (float) n / (float) fftSize;
+//        phaseDiff = wrapPhase(phaseDiff - binCenterFrequency * hopSize);
+//
+////        float binDeviation = (phaseDiff / TWO_PI) / (float)hopSize;
+////        float binDeviation = phaseDiff / hopSize;
+////        float binDeviation = ofMap(phaseDiff, -M_PI, M_PI, -0.5, 0.5);
+//        float binDeviation = phaseDiff / (hopSize * TWO_PI);
+//
+//        analysisFrequencies[n] = (float)n + binDeviation;
+//        analysisMagnitudes[n] = amplitude;
+//
+//        lastInputPhases[n] = phase;
+//
+//        if (amplitude > maxBinValue) {
+//            maxBinValue = amplitude;
+//            maxBinIndex = n;
+//        }
+//
+//        calculationsForGui[0] = (float) maxBinIndex;
+//        calculationsForGui[1] = analysisFrequencies[maxBinIndex] * 44100 / (float) fftSize;
+//    }
+////
+////    // IFTT
+////    // clean synthesis arrays
+//    for (int i = 0; i < fftSize; i++) {
+//        synthesisMagnitudes[i] = 0;
+//        synthesisPhases[i] = 0;
+//        synthesisFrequencies[i] = 0;
+//    }
 //
 //    // robotization
 ////    for (int i = 0; i < fftSize; i++) {
@@ -180,59 +200,64 @@ void PhaseVocoder::processWindow() {
 ////    }
 //
     // pitch shift
-    if (pitchShift != 0) {
-        for (int n = 0; n < fftSize / 2; n++) {
-            int newBin = floorf(n * pitchShift + 0.5);
-
-            if (newBin <= fftSize / 2) {
-                synthesisMagnitudes[newBin] += analysisMagnitudes[n];
-                synthesisFrequencies[newBin] += analysisFrequencies[n] * pitchShift;
-            }
-
-            float amplitude = synthesisMagnitudes[n];
-            float binDeviation = synthesisFrequencies[n] - n;
-            float phaseDiff = binDeviation * TWO_PI * (float) hopSize / (float) fftSize;
-
-            float binCenterFrequency = TWO_PI * (float) n / (float) fftSize;
-            phaseDiff += binCenterFrequency * hopSize;
-
-            float outPhase = wrapPhase(lastOutputPhases[n] + phaseDiff);
-            synthesisPhases[n] = outPhase;
-            lastOutputPhases[n] = outPhase;
-
-//            if (n > 0 && n < fftSize / 2) {
-//                float realComponent = amplitude * cosf(outPhase);
-//                float imaginaryComponent = -amplitude * sinf(outPhase);
+//    if (pitchShift != 0) {
+//        for (int n = 0; n < fftSize / 2; n++) {
+//            int newBin = floorf(n * pitchShift + 0.5);
 //
-//                synthesisMagnitudes[n + fftSize/2] = amplitude;
-//                synthesisPhases[n + fftSize/2] = phases[n];
+//            if (newBin <= fftSize / 2) {
+//                synthesisMagnitudes[newBin] += analysisMagnitudes[n];
+//                synthesisFrequencies[newBin] += analysisFrequencies[n] * pitchShift;
 //            }
-        }
-    } else {
-        for (int i = 0; i < fftSize; i++) {
-            synthesisMagnitudes[i] = analysisMagnitudes[i];
-            synthesisPhases[i] = phases[i];
-        }
-    }
 //
-    vector<float> outputWindow(windowSize);
+//            float amplitude = synthesisMagnitudes[n];
+//            float binDeviation = synthesisFrequencies[n] - n;
+//            float phaseDiff = binDeviation * TWO_PI * (float) hopSize / (float) fftSize;
 //
-    for (int i = 0; i < fftSize/2; i++) {
-        synthMag[i] = synthesisMagnitudes[i];
-        synthAmp[i] = synthesisPhases[i];
-    }
-  
-    
-    for (int i = 0; i < fftSize; i++) {
-//        float sample = ifft.process(synthesisMagnitudes, synthesisPhases);
-        float sample = ifft.process(synthMag, synthAmp);
+//            float binCenterFrequency = TWO_PI * (float) n / (float) fftSize;
+//            phaseDiff += binCenterFrequency * hopSize;
+//
+//            float outPhase = wrapPhase(lastOutputPhases[n] + phaseDiff);
+//            synthesisPhases[n] = outPhase;
+//            lastOutputPhases[n] = outPhase;
+//
+////            if (n > 0 && n < fftSize / 2) {
+////                float realComponent = amplitude * cosf(outPhase);
+////                float imaginaryComponent = -amplitude * sinf(outPhase);
+////
+////                synthesisMagnitudes[n + fftSize/2] = amplitude;
+////                synthesisPhases[n + fftSize/2] = phases[n];
+////            }
+//        }
+//    } else {
+//        for (int i = 0; i < fftSize; i++) {
+//            synthesisMagnitudes[i] = analysisMagnitudes[i];
+//            synthesisPhases[i] = phases[i];
+//        }
+//    }
+//
+//    vector<float> outputWindow(windowSize);
+////
+//    for (int i = 0; i < fftSize/2; i++) {
+//        synthMag[i] = synthesisMagnitudes[i];
+//        synthAmp[i] = synthesisPhases[i];
+//    }
+//
+//    vector<float> outputWindow(windowSize);
+//    for (int i = 0; i < fftSize/2; i++) {
+//        synthMag[i] = fft.magnitudes[i];
+//        synthAmp[i] = fft.phases[i];
+//    }
+//
+//    for (int i = 0; i < fftSize; i++) {
+////        float sample = ifft.process(synthesisMagnitudes, synthesisPhases);
 //        float sample = ifft.process(fft.magnitudes, fft.phases);
-        outputWindow[i] = sample;
-    }
-//
+////        float sample = ifft.process(fft.magnitudes, fft.phases);
+//        outputWindow[i] = sample;
+//    }
+////
 //    // write to output buffer
     for (int i = 0; i < window.size(); i++) {
-        float windowSample = outputWindow[i] * analysisWindowBuffer[i];
+        float windowSample = ifftSignal[i];
         outputBuffer->add(windowSample);
     }
     
@@ -241,9 +266,9 @@ void PhaseVocoder::processWindow() {
 //    }
 
     outputBuffer->shiftWritePoint(-windowSize + hopSize);
-    
-    delete[] synthAmp;
-    delete[] synthMag;
+//    
+//    delete[] synthAmp;
+//    delete[] synthMag;
 }
 
 void PhaseVocoder::setPitchShift(float _pitchShift) {

@@ -29,7 +29,7 @@ void ofApp::setup() {
     binFreq = sampleRate / fftSize;
     
     windowSize = fftSize;
-    hopSize = windowSize / 4;
+    hopSize = windowSize / 2;
     
     phaseVocoder.setup(fftSize, windowSize, hopSize);
 //
@@ -60,6 +60,8 @@ void ofApp::setup() {
     recordedSamplesReadPoint = 0;
     recordedSamples.resize(recordedSamplesSize);
     isRecording = false;
+    
+    channelMix = 0.5;
 }
 
 //--------------------------------------------------------------
@@ -103,11 +105,14 @@ void ofApp::update() {
 
 //--------------------------------------------------------------
 void ofApp::draw() {
-    float bandWidth = ofGetWidth()/ (float)fftBins;
-    float* magnitudes = phaseVocoder.fft.magnitudes;
+    int fft2Bins = phaseVocoder.fft2->getBinSize();
+    float bandWidth = ofGetWidth()/ (float)fft2Bins;
+    float* magnitudes = phaseVocoder.curFftAmplitudes;
     
-    for (int i = 0; i < fftBins; i++) {
-        float fftMagnitude = magnitudes[i];
+    cout << fft2Bins << endl;
+    
+    for (int i = 0; i < fft2Bins; i++) {
+        float fftMagnitude = magnitudes[i] * 100;
         float x = i * bandWidth;
         ofDrawRectangle(x, ofGetHeight() / 2, bandWidth, -fftMagnitude);
     }
@@ -150,10 +155,10 @@ void ofApp::audioIn(float* buffer, int bufferSize, int nChannels) {
 void ofApp::audioOut(float* buffer, int bufferSize, int nChannels) {
     for (int i = 0; i < bufferSize; i++) {
         float sample = 0;
-        
+
         if (!isRecording && recordedSamplesCount > bufferSize) {
             sample = recordedSamples[recordedSamplesReadPoint];
-            
+
             recordedSamplesReadPoint += 1;
             if (recordedSamplesReadPoint >= recordedSamplesCount) {
                 recordedSamplesReadPoint = 0;
@@ -165,7 +170,7 @@ void ofApp::audioOut(float* buffer, int bufferSize, int nChannels) {
 
         float currentSample = phaseVocoder.readSample();
         
-        currentSample *= 0.5;
+        currentSample *= 0.05;
 
         buffer[i * nChannels + 0] = currentSample;
         buffer[i * nChannels + 1] = currentSample;
@@ -219,6 +224,7 @@ void ofApp::mouseMoved(int x, int y) {
     frequency = ofMap(x, 0, ofGetWidth(), 10, 22000);
 //    float pitchShift = ofClamp(ofMap(x, 0, ofGetWidth(), 0, 4), 0, 4);
 //    phaseVocoder.setPitchShift(pitchShift);
+    channelMix = ofMap(y, 0, ofGetHeight(), 1, 0);
 }
 
 //--------------------------------------------------------------

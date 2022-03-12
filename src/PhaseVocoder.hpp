@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include "ofMain.h"
 #include "ofxMaxim.h"
+#include "ofxFft.h"
 #include "CircularBuffer.hpp"
 
 class PhaseVocoder;
@@ -39,7 +40,9 @@ public:
     void setPitchShift(float pitchShift);
 
     float pitchShift;
-
+    
+    ofxFft* fft2;
+    float* curFftAmplitudes;
 private:
     
     int fftSize;

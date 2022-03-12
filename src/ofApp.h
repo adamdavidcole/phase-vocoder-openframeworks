@@ -52,5 +52,7 @@ class ofApp : public ofBaseApp {
     int recordedSamplesReadPoint;
     vector<float> recordedSamples;
     bool isRecording;
+    
+    float channelMix;
 };
 
