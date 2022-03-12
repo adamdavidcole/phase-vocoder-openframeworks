@@ -105,20 +105,29 @@ void ofApp::update() {
 
 //--------------------------------------------------------------
 void ofApp::draw() {
-    int fft2Bins = phaseVocoder.fft2->getBinSize();
+    int fft2Bins = phaseVocoder.fft->getBinSize();
     float bandWidth = ofGetWidth()/ (float)fft2Bins;
-    float* magnitudes = phaseVocoder.curFftAmplitudes;
-        
+    float* signalMagnitudes = phaseVocoder.signalFftAmplitudes;
+    float* processedMagnitudes = phaseVocoder.processedFftAmplitudes;
+    
+    ofSetColor(255, 255, 255);
     for (int i = 0; i < fft2Bins; i++) {
-        float fftMagnitude = magnitudes[i] * 100;
+        float fftMagnitude = signalMagnitudes[i] * 1000;
         float x = i * bandWidth;
         ofDrawRectangle(x, ofGetHeight() / 2, bandWidth, -fftMagnitude);
     }
     
-    ofDrawBitmapString("Bin: " + to_string(phaseVocoder.calculationsForGui[0]), 100, 100);
-    ofDrawBitmapString("Oscillator frequency: " + to_string(frequency), 100, 120);
-    ofDrawBitmapString("Calculated frequency: " + to_string(phaseVocoder.calculationsForGui[1]), 100, 140);
-    ofDrawBitmapString("Error: " + to_string(abs(phaseVocoder.calculationsForGui[1] - frequency)), 100, 160);
+    ofSetColor(0, 0, 255);
+    for (int i = 0; i < fft2Bins; i++) {
+        float fftMagnitude = processedMagnitudes[i] * 1000;
+        float x = i * bandWidth;
+        ofDrawRectangle(x, ofGetHeight() / 2, bandWidth, -fftMagnitude);
+    }
+    
+//    ofDrawBitmapString("Bin: " + to_string(phaseVocoder.calculationsForGui[0]), 100, 100);
+//    ofDrawBitmapString("Oscillator frequency: " + to_string(frequency), 100, 120);
+//    ofDrawBitmapString("Calculated frequency: " + to_string(phaseVocoder.calculationsForGui[1]), 100, 140);
+//    ofDrawBitmapString("Error: " + to_string(abs(phaseVocoder.calculationsForGui[1] - frequency)), 100, 160);
 
 //    CHROMAGRAM
 //    float chromaWidth = ofGetWidth() / chroma.size();
@@ -152,17 +161,17 @@ void ofApp::audioIn(float* buffer, int bufferSize, int nChannels) {
 //--------------------------------------------------------------
 void ofApp::audioOut(float* buffer, int bufferSize, int nChannels) {
     for (int i = 0; i < bufferSize; i++) {
-        float sample = 0;
-
-        if (!isRecording && recordedSamplesCount > bufferSize) {
-            sample = recordedSamples[recordedSamplesReadPoint];
-
-            recordedSamplesReadPoint += 1;
-            if (recordedSamplesReadPoint >= recordedSamplesCount) {
-                recordedSamplesReadPoint = 0;
-            }
-        }
-//        float sample = pianoSamp.play();
+//        float sample = 0;
+//
+//        if (!isRecording && recordedSamplesCount > bufferSize) {
+//            sample = recordedSamples[recordedSamplesReadPoint];
+//
+//            recordedSamplesReadPoint += 1;
+//            if (recordedSamplesReadPoint >= recordedSamplesCount) {
+//                recordedSamplesReadPoint = 0;
+//            }
+//        }
+        float sample = pianoSamp.play();
 //        float sample = osc.sinewave(frequency);
         phaseVocoder.addSample(sample);
 

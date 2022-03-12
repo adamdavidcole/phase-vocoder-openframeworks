@@ -24,11 +24,8 @@ PhaseVocoder::~PhaseVocoder() {
     delete[] synthesisMagnitudes;
     delete[] synthesisPhases;
     
-    delete[] indata;
-    delete[] outdata;
-    delete[] curFftAmplitudes;
-    delete[] real;
-    delete[] imaginary;
+    delete[] signalFftAmplitudes;
+    delete[] processedFftAmplitudes;
 }
 
 void PhaseVocoder::setup(int _fftSize, int _windowSize, int _hopSize) {
@@ -47,15 +44,14 @@ void PhaseVocoder::setup(int _fftSize, int _windowSize, int _hopSize) {
     
     lastInputPhases.resize(fftSize);
     lastOutputPhases.resize(fftSize);
+    
     analysisMagnitudes.resize(fftSize / 2 + 1);
     analysisFrequencies.resize(fftSize / 2 + 1);
     
-//    synthesisMagnitudes.resize(fftSize / 2 + 1);
     synthesisFrequencies.resize(fftSize / 2 + 1);
     synthesisMagnitudes = new float[fftSize / 2 + 1];
     synthesisPhases = new float[fftSize / 2 + 1];
-    real = new float[fftSize / 2 + 1];
-    imaginary = new float[fftSize / 2 + 1];
+
     
     analysisWindowBuffer.resize(windowSize);
     for (int i = 0; i < windowSize; i++) {
@@ -64,23 +60,14 @@ void PhaseVocoder::setup(int _fftSize, int _windowSize, int _hopSize) {
     
     windowProcessor.setup(this);
 
-    fft.setup(fftSize, windowSize, windowSize);
-    ifft.setup(fftSize, windowSize, windowSize);
+    fft = ofxFft::create(windowSize, OF_FFT_WINDOW_HAMMING);
     
-    fft2 = ofxFft::create(windowSize, OF_FFT_WINDOW_HAMMING);
-    
-    calculationsForGui.resize(2);
     
     pitchShift = powf(2.0, 3.0 / 12.0);
     
-    indata = new float[windowSize];
-    outdata = new float[windowSize];
-    for (int i = 0; i < windowSize; i++) {
-        indata[i] = 0;
-        outdata[i] = 0;
-    }
     
-    curFftAmplitudes = new float[windowSize];
+    signalFftAmplitudes = new float[windowSize];
+    processedFftAmplitudes = new float[windowSize];
     
     binFrequencies.resize(fftSize/2);
     for(int n = 0; n <= fftSize/2; n++) {
@@ -109,30 +96,47 @@ float wrapPhase(float phaseIn) {
 }
 
 void PhaseVocoder::processWindow() {
-    int maxBinIndex = 0; // index of bin with peak magnitude
-    float maxBinValue = 0; // magnitude of peak bin
-//
-//    maxiFFT fft;
-//    maxiIFFT ifft;
-//
-//    fft.setup(fftSize, windowSize, windowSize);
-//    ifft.setup(fftSize, windowSize, windowSize);
-    
     // buffer of samples to process
     vector<float> window = nextWindowToProcess;
+    // apply window function to signal
     for (int i = 0; i < windowSize; i++) {
         window[i] = window[i] * analysisWindowBuffer[i];
     }
     
-    fft2->setSignal(window);
-    float* amplitudes = fft2->getAmplitude();
-    float* phases = fft2->getPhase();
+    // execute forward FFT
+    fft->setSignal(window);
+    float* amplitudes = fft->getAmplitude();
+    float* phases = fft->getPhase();
     
     for (int i = 0; i < fftSize / 2; i++) {
-        curFftAmplitudes[i] = amplitudes[i];
+        signalFftAmplitudes[i] = amplitudes[i];
     }
     
+    // DO BLOCK PROCESSING
+    processBlock(amplitudes, phases);
     
+    for (int i = 0; i < fftSize / 2; i++) {
+        processedFftAmplitudes[i] = amplitudes[i];
+    }
+    
+    // execute the reverse FFT
+    fft->setPolar(amplitudes, phases);
+    float* ifftSignal = fft->getSignal();
+
+   // write to output buffer
+    for (int i = 0; i < window.size(); i++) {
+        // apply the window function befroe writing to output
+        float windowSample = ifftSignal[i] * analysisWindowBuffer[i];
+        outputBuffer->add(windowSample);
+    }
+
+    // shift output buff to next overlapping write point
+    outputBuffer->shiftWritePoint(-windowSize + hopSize);
+}
+
+// the following code/alogorithm from BelaPlatform:
+// https://github.com/BelaPlatform/bela-online-course/tree/master/lectures/lecture-20
+void PhaseVocoder::processBlock(float *amplitudes, float *phases) {
     for(int n = 0; n <= fftSize/2; n++) {
         // Turn real and imaginary components into amplitude and phase
         float amplitude = amplitudes[n];
@@ -163,7 +167,6 @@ void PhaseVocoder::processWindow() {
     // Zero out the synthesis bins, ready for new data
     for(int n = 0; n <= fftSize / 2; n++) {
         synthesisMagnitudes[n] = synthesisFrequencies[n] = 0;
-        real[n] = imaginary[n] = 0;
     }
     
     // Handle the pitch shift, storing frequencies into new bins
@@ -190,172 +193,13 @@ void PhaseVocoder::processWindow() {
         // Advance the phase from the previous hop
         float outPhase = wrapPhase(lastOutputPhases[n] + phaseDiff);
         
-        // Now convert magnitude and phase back to real and imaginary components
-        real[n] = synthesisMagnitudes[n] * cosf(outPhase);
-        imaginary[n] = synthesisMagnitudes[n] * sinf(outPhase);
-        
-        
+        // Store the updated amplitude/phase
         amplitudes[n] = synthesisMagnitudes[n];
         phases[n] = outPhase;
-        // Also store the complex conjugate in the upper half of the spectrum
-//        if(n > 0 && n < gFftSize / 2) {
-//            gFft.fdr(gFftSize - n) = gFft.fdr(n);
-//            gFft.fdi(gFftSize - n) = -gFft.fdi(n);
-//        }
         
         // Save the phase for the next hop
         lastOutputPhases[n] = outPhase;
     }
-    
-    
-    
-    fft2->setPolar(amplitudes, phases);
-//    fft2->setCartesian(real, imaginary);
-    float* ifftSignal = fft2->getSignal();
-//    for (int i = 0; i < windowSize; i++) {
-//        indata[i] = window[i];
-//    }
-    
-//    smbPitchShift(pitchShift, windowSize, fftSize, hopSize, 44100, indata, outdata);
-    
-//
-  
-//    // Apply window function
-//
-//    // FFT ->
-//    for (int i = 0; i < window.size(); i++) {
-//        fft.process(window[i]);
-//    }
-//
-//    // block based processing ->
-//    float* amplitudes = fft.magnitudes;
-//    float* phases = fft.phases;
-
-//    float* synthMag = new float[fftSize];
-//    float* synthAmp = new float[fftSize];
-//
-////
-//    for (int n = 0; n < fftSize / 2; n++) {
-//        float amplitude = amplitudes[n];
-//        float phase = phases[n];
-//
-//
-//        // calculate the phase difference between this hop and the previous one
-//        float phaseDiff = phase - lastInputPhases[n];
-//
-//        float binCenterFrequency = TWO_PI * (float) n / (float) fftSize;
-//        phaseDiff = wrapPhase(phaseDiff - binCenterFrequency * hopSize);
-//
-////        float binDeviation = (phaseDiff / TWO_PI) / (float)hopSize;
-////        float binDeviation = phaseDiff / hopSize;
-////        float binDeviation = ofMap(phaseDiff, -M_PI, M_PI, -0.5, 0.5);
-//        float binDeviation = phaseDiff / (hopSize * TWO_PI);
-//
-//        analysisFrequencies[n] = (float)n + binDeviation;
-//        analysisMagnitudes[n] = amplitude;
-//
-//        lastInputPhases[n] = phase;
-//
-//        if (amplitude > maxBinValue) {
-//            maxBinValue = amplitude;
-//            maxBinIndex = n;
-//        }
-//
-//        calculationsForGui[0] = (float) maxBinIndex;
-//        calculationsForGui[1] = analysisFrequencies[maxBinIndex] * 44100 / (float) fftSize;
-//    }
-////
-////    // IFTT
-////    // clean synthesis arrays
-//    for (int i = 0; i < fftSize; i++) {
-//        synthesisMagnitudes[i] = 0;
-//        synthesisPhases[i] = 0;
-//        synthesisFrequencies[i] = 0;
-//    }
-//
-//    // robotization
-////    for (int i = 0; i < fftSize; i++) {
-////        synthesisMagnitudes[i] = fft.magnitudes[i];
-////        synthesisPhases[i] = 0;
-////
-////    }
-////
-////    // whisperization
-////    for (int i = 0; i < fftSize; i++) {
-////        synthesisMagnitudes[i] = fft.magnitudes[i];
-////        synthesisPhases[i] = ofRandom(0, TWO_PI);
-////    }
-//
-    // pitch shift
-//    if (pitchShift != 0) {
-//        for (int n = 0; n < fftSize / 2; n++) {
-//            int newBin = floorf(n * pitchShift + 0.5);
-//
-//            if (newBin <= fftSize / 2) {
-//                synthesisMagnitudes[newBin] += analysisMagnitudes[n];
-//                synthesisFrequencies[newBin] += analysisFrequencies[n] * pitchShift;
-//            }
-//
-//            float amplitude = synthesisMagnitudes[n];
-//            float binDeviation = synthesisFrequencies[n] - n;
-//            float phaseDiff = binDeviation * TWO_PI * (float) hopSize / (float) fftSize;
-//
-//            float binCenterFrequency = TWO_PI * (float) n / (float) fftSize;
-//            phaseDiff += binCenterFrequency * hopSize;
-//
-//            float outPhase = wrapPhase(lastOutputPhases[n] + phaseDiff);
-//            synthesisPhases[n] = outPhase;
-//            lastOutputPhases[n] = outPhase;
-//
-////            if (n > 0 && n < fftSize / 2) {
-////                float realComponent = amplitude * cosf(outPhase);
-////                float imaginaryComponent = -amplitude * sinf(outPhase);
-////
-////                synthesisMagnitudes[n + fftSize/2] = amplitude;
-////                synthesisPhases[n + fftSize/2] = phases[n];
-////            }
-//        }
-//    } else {
-//        for (int i = 0; i < fftSize; i++) {
-//            synthesisMagnitudes[i] = analysisMagnitudes[i];
-//            synthesisPhases[i] = phases[i];
-//        }
-//    }
-//
-//    vector<float> outputWindow(windowSize);
-////
-//    for (int i = 0; i < fftSize/2; i++) {
-//        synthMag[i] = synthesisMagnitudes[i];
-//        synthAmp[i] = synthesisPhases[i];
-//    }
-//
-//    vector<float> outputWindow(windowSize);
-//    for (int i = 0; i < fftSize/2; i++) {
-//        synthMag[i] = fft.magnitudes[i];
-//        synthAmp[i] = fft.phases[i];
-//    }
-//
-//    for (int i = 0; i < fftSize; i++) {
-////        float sample = ifft.process(synthesisMagnitudes, synthesisPhases);
-//        float sample = ifft.process(fft.magnitudes, fft.phases);
-////        float sample = ifft.process(fft.magnitudes, fft.phases);
-//        outputWindow[i] = sample;
-//    }
-////
-//    // write to output buffer
-    for (int i = 0; i < window.size(); i++) {
-        float windowSample = ifftSignal[i] * analysisWindowBuffer[i];
-        outputBuffer->add(windowSample);
-    }
-    
-//    for (int i = 0; i < window.size(); i++) {
-//        outputBuffer->add(indata[i]);
-//    }
-
-    outputBuffer->shiftWritePoint(-windowSize + hopSize);
-//    
-//    delete[] synthAmp;
-//    delete[] synthMag;
 }
 
 void PhaseVocoder::setPitchShift(float _pitchShift) {

@@ -32,17 +32,14 @@ public:
     void addSample(float sample);
     float readSample();
     void processWindow();
-
-    ofxMaxiFFT fft;
-    ofxMaxiIFFT ifft;
-    vector<float> calculationsForGui;
-    
+    void processBlock(float* amplitudes, float* phases);
     void setPitchShift(float pitchShift);
 
     float pitchShift;
     
-    ofxFft* fft2;
-    float* curFftAmplitudes;
+    ofxFft* fft;
+    float* signalFftAmplitudes;
+    float* processedFftAmplitudes;
 private:
     
     int fftSize;
@@ -73,12 +70,7 @@ private:
     
     WindowProcessor windowProcessor;
     
-    
-    float* indata;
-    float* outdata;
-    
-    float* real;
-    float* imaginary;
+
     
     vector<float> binFrequencies;
     
