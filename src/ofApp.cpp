@@ -71,8 +71,8 @@ void ofApp::setup() {
     myTexture.allocate (camWidth, camHeight, GL_RGB);
     
     float planeScale = 0.75;
-    int planeWidth = ofGetWidth() * planeScale;
-    int planeHeight = ofGetHeight() * planeScale;
+    int planeWidth = camWidth * planeScale;
+    int planeHeight = camHeight * planeScale;
     int planeGridSize = 20;
     int planeColumns = planeWidth / planeGridSize;
     int planeRows = planeHeight / planeGridSize;
@@ -103,6 +103,8 @@ void ofApp::update() {
                 ofColor currColor = image.getColor(x, y);
                 ofColor nextColor = image.getColor(x + shift, y);
                 pixelsToDraw.setColor(x, y, ofColor(prevColor.r, currColor.g, nextColor.b));
+                
+                pixelsToDraw.setColor(x, y, currColor);
                 
 //                pixelsToDraw.setColor(x, y, ofColor(200, 0, 0));
             }
@@ -152,14 +154,20 @@ void ofApp::update() {
 void ofApp::draw() {
     myTexture.bind();
     shader.begin();
+    shader.setUniform2f("u_res", plane.getWidth(), plane.getHeight());
     
     ofPushMatrix();
     ofTranslate(ofGetWidth()/2, ofGetHeight()/2);
+    ofRotateDeg(180);
+    
     plane.draw();
+    
     ofPopMatrix();
 
     shader.end();
     myTexture.unbind();
+    
+    
     
     
   
