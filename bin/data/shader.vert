@@ -4,6 +4,7 @@ precision mediump float;
 
 uniform mat4 modelViewProjectionMatrix;
 uniform vec2 u_mouse;
+uniform vec2 u_resolution;
 uniform vec2 u_res;
 uniform float u_time;
 
@@ -28,9 +29,10 @@ float noise(vec2 p){
 }
 
 void main(){
-    float nx = (noise(texcoord + u_time) * u_mouse.x) / u_res.x;
-    float ny = (noise(texcoord + u_time) * u_mouse.y) / u_res.x;
-
-    varyingtexcoord = vec2(texcoord.x + nx * 100.0, texcoord.y + ny * 100.0);
+    float n = noise(texcoord + u_time) * 0.0;
+    varyingtexcoord = vec2(
+        texcoord.x + n * 100.0,
+        texcoord.y + n * 100.0
+    );
     gl_Position = modelViewProjectionMatrix * position;
 }

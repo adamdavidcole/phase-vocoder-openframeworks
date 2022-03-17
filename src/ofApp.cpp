@@ -248,7 +248,7 @@ void ofApp::audioOut(float* buffer, int bufferSize, int nChannels) {
 
         float currentSample = phaseVocoder.readSample();
 //        currentSample = delayLine.dl(currentSample, 8000, 0.3);
-        currentSample *= 0.0;
+//        currentSample *= 0.05;
 
         buffer[i * nChannels + 0] = currentSample;
         buffer[i * nChannels + 1] = currentSample;
