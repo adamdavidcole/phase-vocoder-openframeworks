@@ -3,6 +3,8 @@
 #include "ofMain.h"
 #include "ofxMaxim.h"
 #include "ofxGui.h"
+#include "ofxShader.h"
+#include "ofxShaderFilter.h"
 #include "CircularBuffer.hpp"
 #include "PhaseVocoder.hpp"
 
@@ -56,5 +58,15 @@ class ofApp : public ofBaseApp {
     float channelMix;
     
     maxiDelayline delayLine;
+    
+    int camWidth;
+    int camHeight;
+    
+    ofVideoGrabber webcam;
+    ofPixels pixelsToDraw;
+    ofTexture myTexture;
+    
+    ofPlanePrimitive plane;
+    ofxShader shader;
 };
 

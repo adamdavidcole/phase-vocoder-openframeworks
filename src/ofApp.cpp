@@ -62,11 +62,56 @@ void ofApp::setup() {
     isRecording = false;
     
     channelMix = 0.5;
+    
+    camWidth = 1280;
+    camHeight = 720;
+    
+    webcam.setup(camWidth, camHeight);
+    pixelsToDraw.allocate(camWidth, camHeight, 3);
+    myTexture.allocate (camWidth, camHeight, GL_RGB);
+    
+    float planeScale = 0.75;
+    int planeWidth = ofGetWidth() * planeScale;
+    int planeHeight = ofGetHeight() * planeScale;
+    int planeGridSize = 20;
+    int planeColumns = planeWidth / planeGridSize;
+    int planeRows = planeHeight / planeGridSize;
+
+    plane.set(planeWidth,
+              planeHeight,
+              planeColumns,
+              planeRows,
+              OF_PRIMITIVE_TRIANGLES);
+    plane.mapTexCoordsFromTexture(myTexture);
+    
+    shader.load("shader");
 }
 
 //--------------------------------------------------------------
 void ofApp::update() {
+    webcam.update();
+    
+    // If the grabber indeed has fresh data,
+    if(webcam.isFrameNew()){
 
+        ofPixels image = webcam.getPixels();
+        
+        for (int y = 0; y < camHeight; y++) {
+            for (int x = 0; x < camWidth; x++) {
+                int shift = ofMap(mouseX, 0, ofGetWidth(), -200, 200);
+                ofColor prevColor = image.getColor(x - shift, y);
+                ofColor currColor = image.getColor(x, y);
+                ofColor nextColor = image.getColor(x + shift, y);
+                pixelsToDraw.setColor(x, y, ofColor(prevColor.r, currColor.g, nextColor.b));
+                
+//                pixelsToDraw.setColor(x, y, ofColor(200, 0, 0));
+            }
+        }
+
+        myTexture.loadData(pixelsToDraw);
+}
+
+    
     // CHROMAGRAM!
 //    int currentBin = 0;
 //    int fftBins = fftSize / 2;
@@ -105,24 +150,38 @@ void ofApp::update() {
 
 //--------------------------------------------------------------
 void ofApp::draw() {
-    int fft2Bins = phaseVocoder.fft->getBinSize();
-    float bandWidth = ofGetWidth()/ (float)fft2Bins;
-    float* signalMagnitudes = phaseVocoder.signalFftAmplitudes;
-    float* processedMagnitudes = phaseVocoder.processedFftAmplitudes;
+    myTexture.bind();
+    shader.begin();
     
-    ofSetColor(255, 255, 255);
-    for (int i = 0; i < fft2Bins; i++) {
-        float fftMagnitude = signalMagnitudes[i] * 1000;
-        float x = i * bandWidth;
-        ofDrawRectangle(x, ofGetHeight() / 2, bandWidth, -fftMagnitude);
-    }
+    ofPushMatrix();
+    ofTranslate(ofGetWidth()/2, ofGetHeight()/2);
+    plane.draw();
+    ofPopMatrix();
+
+    shader.end();
+    myTexture.unbind();
     
-    ofSetColor(0, 0, 255);
-    for (int i = 0; i < fft2Bins; i++) {
-        float fftMagnitude = processedMagnitudes[i] * 1000;
-        float x = i * bandWidth;
-        ofDrawRectangle(x, ofGetHeight() / 2, bandWidth, -fftMagnitude);
-    }
+    
+  
+
+//    int fft2Bins = phaseVocoder.fft->getBinSize();
+//    float bandWidth = ofGetWidth()/ (float)fft2Bins;
+//    float* signalMagnitudes = phaseVocoder.signalFftAmplitudes;
+//    float* processedMagnitudes = phaseVocoder.processedFftAmplitudes;
+//
+//    ofSetColor(255, 255, 255);
+//    for (int i = 0; i < fft2Bins; i++) {
+//        float fftMagnitude = signalMagnitudes[i] * 1000;
+//        float x = i * bandWidth;
+//        ofDrawRectangle(x, ofGetHeight() / 2, bandWidth, -fftMagnitude);
+//    }
+//
+//    ofSetColor(0, 0, 255);
+//    for (int i = 0; i < fft2Bins; i++) {
+//        float fftMagnitude = processedMagnitudes[i] * 1000;
+//        float x = i * bandWidth;
+//        ofDrawRectangle(x, ofGetHeight() / 2, bandWidth, -fftMagnitude);
+//    }
     
 //    ofDrawBitmapString("Bin: " + to_string(phaseVocoder.calculationsForGui[0]), 100, 100);
 //    ofDrawBitmapString("Oscillator frequency: " + to_string(frequency), 100, 120);
@@ -177,7 +236,7 @@ void ofApp::audioOut(float* buffer, int bufferSize, int nChannels) {
 
         float currentSample = phaseVocoder.readSample();
 //        currentSample = delayLine.dl(currentSample, 8000, 0.3);
-//        currentSample *= 0.05;
+        currentSample *= 0.0;
 
         buffer[i * nChannels + 0] = currentSample;
         buffer[i * nChannels + 1] = currentSample;
@@ -244,6 +303,10 @@ void ofApp::mouseMoved(int x, int y) {
     int pitchCount = (int) ofMap(x, 0, ofGetWidth(), 1, 20);
     phaseVocoder.pitchCount = pitchCount;
 //    channelMix = ofMap(y, 0, ofGetHeight(), 1, 0);
+    
+//    int r = ofMap(x, 0, ofGetWidth(), 0, 255);
+//    int b = ofMap(y, 0, ofGetHeight(), 0, 255);
+//    ofSetColor(r, abs(r - b), b);
 }
 
 //--------------------------------------------------------------
