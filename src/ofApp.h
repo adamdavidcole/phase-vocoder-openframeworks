@@ -65,8 +65,15 @@ class ofApp : public ofBaseApp {
     ofVideoGrabber webcam;
     ofPixels pixelsToDraw;
     ofTexture myTexture;
+    ofImage feedbackImg;
+    bool shouldClearFeedbackImg;
     
     ofPlanePrimitive plane;
+    int planeWidth;
+    int planeHeight;
+    int planeX;
+    int planeY;
+    
     ofxShader shader;
 };
 

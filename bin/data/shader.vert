@@ -31,8 +31,8 @@ float noise(vec2 p){
 void main(){
     float n = noise(texcoord + u_time) * 0.0;
     varyingtexcoord = vec2(
-        texcoord.x + n * 100.0,
-        texcoord.y + n * 100.0
+        texcoord.x,
+        texcoord.y
     );
     gl_Position = modelViewProjectionMatrix * position;
 }

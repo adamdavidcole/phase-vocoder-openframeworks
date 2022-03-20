@@ -11,7 +11,11 @@ uniform vec2 u_resolution;
 uniform vec2 u_res;
 uniform vec2 u_mouse;
 uniform float u_red;
-uniform sampler2DRect tex0;
+//uniform sampler2DRect tex0;
+//uniform sampler2DRect tex1;
+//
+uniform sampler2DRect inputTexture;
+uniform sampler2DRect feedbackTexture;
 
 in vec2 varyingtexcoord;
 
@@ -39,81 +43,82 @@ float noise(vec2 p){
         mix(rand(ip+vec2(0.0,1.0)),rand(ip+vec2(1.0,1.0)),u.x),u.y);
     return res*res;
 }
-
-vec4 lightning() {
-    float r = rand() * 100.0;
-    vec2 uv = varyingtexcoord / u_res;
-    vec2 n = floor(uv * fract(u_time) * r * 0.1);
-    
-    vec4 currColor = texture2D(tex0, varyingtexcoord);
-    
-    vec3 textured = mod(vec3(currColor), vec4(uv, n).xyz);
-    
-    if (r > 95) {
-        return vec4(textured, 1.0);
-    }
-    
-    return currColor;
-}
-
-vec4 full_noise() {
-    vec3 noisePattern = vec3(fract(sin(dot(fract(vec2(random(varyingtexcoord * 50))), vec2(28, 312)))));
-    
-//    randomNoise
-//    float noise = rand(varyingtexcoord + rand(vec2(u_time * rand())));
-
-    return vec4(noisePattern, 1.0);
-}
-
-vec4 horizontal_lines() {
-    float r = rand() * 100.0;
-    vec2 uv = varyingtexcoord / u_res;
-
-    //generate black horizontal lines
-    if (mod(uv.y, 0.9) < cos(r) + 0.05 && mod(uv.y, 0.95) > cos(r) && fract(u_time * 0.1) > -0.01 && uv.x < cos(r) + 0.6 && uv.x > cos(r) - 0.6)
-    {
-        return texture(tex0, vec2(cos(u_time)*u_res.x, floor(r) * u_res.y));
-    }
-    return texture2D(tex0, varyingtexcoord);
-}
-
-vec4 vertical_lines() {
-    //generate black vertical lines
-    float r = rand() * 100.0;
-    vec2 uv = varyingtexcoord / u_res;
-    if (mod(uv.x, 0.9) < cos(r) + 0.04 && mod(uv.x, 0.95) > cos(r) && r > 80) {
-        return texture2D(tex0, vec2(cos(u_time) * u_res.x, floor(u_time * 0.05) * u_res.y));
-    }
-    return texture2D(tex0, varyingtexcoord);
-}
-
-
-vec4 rgbShift() {
-    float r = rand();
-    vec2 noiseInput = vec2(u_time, u_time);
-    float n = noise(noiseInput);
-    float shiftX = r * (50.0 * n);
-    
-    float shiftY = rand(vec2(r, r)) * 20.0 * n;
-
-    vec4 currColor = texture2D(tex0, varyingtexcoord);
-    vec4 prevColor = texture2D(tex0, vec2(varyingtexcoord.x - shiftX, varyingtexcoord.y + shiftY));
-    vec4 nextColor = texture2D(tex0, vec2(varyingtexcoord.x + shiftX, varyingtexcoord.y + shiftY));
 //
+//vec4 lightning() {
+//    float r = rand() * 100.0;
+//    vec2 uv = varyingtexcoord / u_res;
+//    vec2 n = floor(uv * fract(u_time) * r * 0.1);
+//
+//    vec4 currColor = texture2D(tex0, varyingtexcoord);
+//
+//    vec3 textured = mod(vec3(currColor), vec4(uv, n).xyz);
+//
+//    if (r > 95) {
+//        return vec4(textured, 1.0);
+//    }
+//
+//    return currColor;
+//}
+//
+//vec4 full_noise() {
+//    vec3 noisePattern = vec3(fract(sin(dot(fract(vec2(random(varyingtexcoord * 50))), vec2(28, 312)))));
+//
+////    randomNoise
+////    float noise = rand(varyingtexcoord + rand(vec2(u_time * rand())));
+//
+//    return vec4(noisePattern, 1.0);
+//}
+//
+//vec4 horizontal_lines() {
+//    float r = rand() * 100.0;
+//    vec2 uv = varyingtexcoord / u_res;
+//
+//    //generate black horizontal lines
+//    if (mod(uv.y, 0.9) < cos(r) + 0.05 && mod(uv.y, 0.95) > cos(r) && fract(u_time * 0.1) > -0.01 && uv.x < cos(r) + 0.6 && uv.x > cos(r) - 0.6)
+//    {
+//        return texture(tex0, vec2(cos(u_time)*u_res.x, floor(r) * u_res.y));
+//    }
+//    return texture2D(tex0, varyingtexcoord);
+//}
+//
+//vec4 vertical_lines() {
+//    //generate black vertical lines
+//    float r = rand() * 100.0;
+//    vec2 uv = varyingtexcoord / u_res;
+//    if (mod(uv.x, 0.9) < cos(r) + 0.04 && mod(uv.x, 0.95) > cos(r) && r > 80) {
+//        return texture2D(tex0, vec2(cos(u_time) * u_res.x, floor(u_time * 0.05) * u_res.y));
+//    }
+//    return texture2D(tex0, varyingtexcoord);
+//}
+//
+//
+//vec4 rgbShift() {
+//    float r = rand();
+//    vec2 noiseInput = vec2(u_time, u_time);
+//    float n = noise(noiseInput);
+//    float shiftX = r * (50.0 * n);
+//
+//    float shiftY = rand(vec2(r, r)) * 20.0 * n;
+//
+//    vec4 currColor = texture2D(tex0, varyingtexcoord);
+//    vec4 prevColor = texture2D(tex0, vec2(varyingtexcoord.x - shiftX, varyingtexcoord.y + shiftY));
+//    vec4 nextColor = texture2D(tex0, vec2(varyingtexcoord.x + shiftX, varyingtexcoord.y + shiftY));
+////
+////    return vec4(prevColor.r, currColor.g, nextColor.b, 1.0);
 //    return vec4(prevColor.r, currColor.g, nextColor.b, 1.0);
-    return vec4(prevColor.r, currColor.g, nextColor.b, 1.0);
-}
-
-vec4 vertical_shift() {
-    vec2 newCoords = varyingtexcoord;
-    if ((varyingtexcoord.y/u_res.y)  < (1 - fract(u_time * 0.8)) && rand() < 0.1) {
-        newCoords.x += 0.01 * u_res.x;
-    }
-    return texture2D(tex0, newCoords);
-}
+//}
+//
+//vec4 vertical_shift() {
+//    vec2 newCoords = varyingtexcoord;
+//    if ((varyingtexcoord.y/u_res.y)  < (1 - fract(u_time * 0.8)) && rand() < 0.1) {
+//        newCoords.x += 0.01 * u_res.x;
+//    }
+//    return texture2D(tex0, newCoords);
+//}
 
 void main(){
     vec2 coord = gl_FragCoord.xy;
+    
     vec3 color = vec3(0.0, 0.5, 0.5);
     
     vec2 uv = coord / u_resolution;
@@ -121,6 +126,40 @@ void main(){
     
     vec2 ratio =  u_resolution / u_res;
     
+    //varyingtexcoord / u_resolution
+    vec2 st = ((varyingtexcoord / u_resolution) - vec2(0.5)) * 1.33 + vec2(0.5);
+    
+    vec2 normalized = vec2(
+        1.0-varyingtexcoord.x/u_resolution.x,
+        varyingtexcoord.y/u_resolution.y
+    );
+    
+    vec2 inputCoord = varyingtexcoord;
+    vec2 feedbackCoord = vec2(u_res.x - inputCoord.x, inputCoord.y);
+    
+    vec4 inputColor = texture2D(inputTexture, inputCoord);
+    vec4 feedbackColor = texture2D(feedbackTexture, feedbackCoord);
+    
+    vec4 combo = mix(inputColor, feedbackColor, 0.5);
+
+//    if (rand()  < 0.5) {
+//        gl_FragColor = inputColor;
+//    } else {
+//        gl_FragColor = feedbackColor;
+//    }
+//
+    gl_FragColor = combo;
+    
+//    vec4 inputColor = texture2D(inputTexture, varyingtexcoord);
+//    gl_FragColor = inputColor;
+    
+//    gl_FragColor = vec4(
+//        normalized.x,
+//        normalized.y,
+//        1.0,
+//        1.0
+//    );
+//    gl_FragColor = inputColor;
     
 //    gl_FragColor = rgbShift();
 //    gl_FragColor = vertical_shift();
@@ -130,21 +169,22 @@ void main(){
 //    gl_FragColor = lightning();
 //    gl_FragColor = (vertical_lines() + vertical_shift() + rgbShift() + lightning()) /4.0;
     
-    float r = rand(vec2(rand(), rand()));
-    
-    if (r < 0.3) {
-        gl_FragColor = rgbShift();
-    } else if (r < 0.5) {
-        gl_FragColor = vertical_shift();
-    } else if (r < 0.51) {
-        gl_FragColor = full_noise();
-    } else if (r < 0.6) {
-        gl_FragColor = horizontal_lines();
-    } else if (r < 0.75) {
-        gl_FragColor = vertical_lines();
-    } else if (r < 0.8) {
-        gl_FragColor = lightning();
-    } else {
-        gl_FragColor = texture2D(tex0, varyingtexcoord);
-    }
+//    GLITCH BEHAVIOR
+//    float r = rand(vec2(rand(), rand()));
+//
+//    if (r < 0.3) {
+//        gl_FragColor = rgbShift();
+//    } else if (r < 0.5) {
+//        gl_FragColor = vertical_shift();
+//    } else if (r < 0.51) {
+//        gl_FragColor = full_noise();
+//    } else if (r < 0.6) {
+//        gl_FragColor = horizontal_lines();
+//    } else if (r < 0.75) {
+//        gl_FragColor = vertical_lines();
+//    } else if (r < 0.8) {
+//        gl_FragColor = lightning();
+//    } else {
+//        gl_FragColor = texture2D(tex0, varyingtexcoord);
+//    }
 }

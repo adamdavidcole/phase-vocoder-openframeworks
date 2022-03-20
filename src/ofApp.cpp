@@ -74,9 +74,14 @@ void ofApp::setup() {
     pixelsToDraw.allocate(camWidth, camHeight, 3);
     myTexture.allocate (camWidth, camHeight, GL_RGB);
     
-    float planeScale = 0.75;
-    int planeWidth = camWidth * planeScale;
-    int planeHeight = camHeight * planeScale;
+    
+    
+    float planeScale = 1;
+    planeWidth = camWidth * planeScale;
+    planeHeight = camHeight * planeScale;
+    planeX = 0;
+    planeY = 0;
+    
     int planeGridSize = 20;
     int planeColumns = planeWidth / planeGridSize;
     int planeRows = planeHeight / planeGridSize;
@@ -87,6 +92,10 @@ void ofApp::setup() {
               planeRows,
               OF_PRIMITIVE_TRIANGLES);
     plane.mapTexCoordsFromTexture(myTexture);
+    
+    feedbackImg.allocate(planeWidth, planeHeight, OF_IMAGE_COLOR);
+    shouldClearFeedbackImg = false;
+
     
     shader.load("shader");
 }
@@ -103,19 +112,32 @@ void ofApp::update() {
         for (int y = 0; y < camHeight; y++) {
             for (int x = 0; x < camWidth; x++) {
                 int shift = ofMap(mouseX, 0, ofGetWidth(), -200, 200);
-                ofColor prevColor = image.getColor(x - shift, y);
                 ofColor currColor = image.getColor(x, y);
-                ofColor nextColor = image.getColor(x + shift, y);
-                pixelsToDraw.setColor(x, y, ofColor(prevColor.r, currColor.g, nextColor.b));
-                
                 pixelsToDraw.setColor(x, y, currColor);
-                
-//                pixelsToDraw.setColor(x, y, ofColor(200, 0, 0));
             }
+        }
+        
+        if (shouldClearFeedbackImg) {
+            // hack for wierd inverse x position bug
+            for (int x = 0; x < feedbackImg.getWidth(); x++) {
+               for (int y = 0; y < feedbackImg.getHeight(); y++) {
+                   ofColor camColor = image.getColor(camWidth - x, y);
+                   feedbackImg.setColor(x, y, camColor);
+               }
+           }
+            
+            feedbackImg.update();
         }
 
         myTexture.loadData(pixelsToDraw);
-}
+    }
+    
+    if (!shouldClearFeedbackImg) {
+        int x = planeX;
+        int y = planeY;
+        feedbackImg.grabScreen(x, y, planeWidth, planeHeight);
+    }
+
 
     
     // CHROMAGRAM!
@@ -155,13 +177,14 @@ void ofApp::update() {
 }
 
 //--------------------------------------------------------------
-void ofApp::draw() {
-    myTexture.bind();
+void ofApp::draw() {    
     shader.begin();
     shader.setUniform2f("u_res", plane.getWidth(), plane.getHeight());
+    shader.setUniformTexture("inputTexture", myTexture, 1);
+    shader.setUniformTexture("feedbackTexture", feedbackImg, 2);
     
     ofPushMatrix();
-    ofTranslate(ofGetWidth()/2, ofGetHeight()/2);
+    ofTranslate(planeWidth/2, planeHeight/2);
     ofRotateDeg(180);
     
     plane.draw();
@@ -169,7 +192,9 @@ void ofApp::draw() {
     ofPopMatrix();
 
     shader.end();
-    myTexture.unbind();
+    
+    int margin = 20;
+    feedbackImg.draw(0, planeHeight + margin);
     
     
     
@@ -288,6 +313,10 @@ void ofApp::keyPressed(int key) {
     if (key == '8') {
         phaseVocoder.setPitchShift(powf(2.0, 12.0 / 12.0));
     }
+    
+    if (key == 'c') {
+        shouldClearFeedbackImg = true;
+    }
    
 //    if (phaseVocoder.pitchShift > 0) {
 //        phaseVocoder.setPitchShift(0);
@@ -301,6 +330,10 @@ void ofApp::keyReleased(int key) {
     if (key == ' ') {
         cout << "End recording" << endl;
         isRecording = false;
+    }
+    
+    if (key == 'c') {
+        shouldClearFeedbackImg = false;
     }
 }
 
