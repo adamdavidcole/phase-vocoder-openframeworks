@@ -278,15 +278,22 @@ void main(){
     vec2 feedbackCoord = vec2(u_res.x - inputCoord.x, inputCoord.y);
     
     float feedbackNoise = cnoise(vec3(feedbackCoord.xy / 100.0, u_time/10.0));
+    vec2 feedbackNoisePos = feedbackCoord + feedbackNoise * 10.0;
+    float clampMargin = 20.0;
+    vec2 feedbackNoisePosClamped = vec2(
+        clamp(feedbackNoisePos.x, clampMargin, u_resolution.x - clampMargin),
+        clamp(feedbackNoisePos.y, clampMargin, u_resolution.y - clampMargin)
+    );
     
     vec4 inputColor = texture2D(inputTexture, inputCoord);
-    vec4 feedbackColor = texture2D(feedbackTexture, feedbackCoord + feedbackNoise*200.0);
+    vec4 feedbackColor = texture2D(feedbackTexture, feedbackNoisePosClamped);
     vec4 glitchColor = glitchColor();
     
-    vec3  comboA = blendPinLight(inputColor.xyz, feedbackColor.xyz, 1.0);
+    vec3 classicCombo = mix(inputColor.xyz, feedbackColor.xyz, .9);
     
+    vec3  comboA = blendPinLight(inputColor.xyz, feedbackColor.xyz, 1.0);
     vec3 combo = mix(inputColor.xyz, comboA.xyz, .999999);
     
     
-    gl_FragColor = vec4(combo.xyz, 1.0);
+    gl_FragColor = vec4(classicCombo.xyz, 1.0);
 }
