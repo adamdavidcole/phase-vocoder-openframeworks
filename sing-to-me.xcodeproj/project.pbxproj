@@ -48,6 +48,7 @@
 		AF0580829426DC6BCA135A5C /* maxiGrains.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9D2FB19B70632A6F86622D94 /* maxiGrains.cpp */; };
 		B266578FC55D23BFEBC042E7 /* ofxGuiGroup.cpp in Sources */ = {isa = PBXBuildFile; fileRef = ECF8674C7975F1063C5E30CA /* ofxGuiGroup.cpp */; };
 		B56FE57CC35806596D38118C /* ofxSliderGroup.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 802251BAF1B35B1D67B32FD0 /* ofxSliderGroup.cpp */; };
+		B85868B627EBB4BA00657BF7 /* DelayLine.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B85868B427EBB4BA00657BF7 /* DelayLine.cpp */; };
 		C4782ECC372420ACE0615B74 /* OscPrintReceivedElements.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BC8881B3C8C0A1C45F042E7A /* OscPrintReceivedElements.cpp */; };
 		D1E8ECF511E92F54ED44721C /* CircularBuffer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F580E5532E2717C964E2BBE5 /* CircularBuffer.cpp */; };
 		D409288D137DB82107887FFD /* ofxFft.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32CA89CD22339F4F9433CAF6 /* ofxFft.cpp */; };
@@ -149,6 +150,8 @@
 		B34D3539DB6F889A78540F7C /* sineTable.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = sineTable.h; path = ../../../addons/ofxMaxim/libs/sineTable.h; sourceTree = SOURCE_ROOT; };
 		B36431C04C788FEDB1ECD8FC /* ofxFft.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ofxFft.h; path = ../../../addons/ofxFft/src/ofxFft.h; sourceTree = SOURCE_ROOT; };
 		B85868B027E3678300657BF7 /* bin */ = {isa = PBXFileReference; lastKnownFileType = folder; path = bin; sourceTree = "<group>"; };
+		B85868B427EBB4BA00657BF7 /* DelayLine.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = DelayLine.cpp; sourceTree = "<group>"; };
+		B85868B527EBB4BA00657BF7 /* DelayLine.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = DelayLine.hpp; sourceTree = "<group>"; };
 		B87C60311EC1FE841C1ECD89 /* ofxLabel.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ofxLabel.h; path = ../../../addons/ofxGui/src/ofxLabel.h; sourceTree = SOURCE_ROOT; };
 		BA274EC7A169D538BD43A5D8 /* ofxGuiUtils.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ofxGuiUtils.h; path = ../../../addons/ofxGui/src/ofxGuiUtils.h; sourceTree = SOURCE_ROOT; };
 		BA5114869056DFF1A50CFA4A /* fft.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = fft.h; path = ../../../addons/ofxMaxim/libs/fft.h; sourceTree = SOURCE_ROOT; };
@@ -940,6 +943,8 @@
 				E4B69E1F0A3A1BDC003C02F2 /* ofApp.h */,
 				7E1065DED2DEDCAAE9DDDA67 /* PhaseVocoder.hpp */,
 				2C3FBE7430BA4A7A26B74C32 /* PhaseVocoder.cpp */,
+				B85868B427EBB4BA00657BF7 /* DelayLine.cpp */,
+				B85868B527EBB4BA00657BF7 /* DelayLine.hpp */,
 				CD00567410D145DE2464DB2D /* smpPitchShift.hpp */,
 				2FAE4DE8E54EC744D3B03AB2 /* CircularBuffer.hpp */,
 				E74EC61A2C69EE8390B3BBBE /* smpPitchShift.cpp */,
@@ -1106,6 +1111,7 @@
 				AF0580829426DC6BCA135A5C /* maxiGrains.cpp in Sources */,
 				083FB2094A4DE99F5A60397A /* maxiMFCC.cpp in Sources */,
 				22F21CE3B902225374BA1CA2 /* maximilian.cpp in Sources */,
+				B85868B627EBB4BA00657BF7 /* DelayLine.cpp in Sources */,
 				9514C2D90467055B1447D074 /* stb_vorbis.c in Sources */,
 				ADE367465D2A8EBAD4C7A8D9 /* IpEndpointName.cpp in Sources */,
 				67FE4C7B15C2F0478C8126C2 /* NetworkingUtils.cpp in Sources */,

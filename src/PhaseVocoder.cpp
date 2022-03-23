@@ -68,7 +68,7 @@ void PhaseVocoder::setup(int _fftSize, int _windowSize, int _hopSize) {
     fft = ofxFft::create(windowSize, OF_FFT_WINDOW_HAMMING);
     crossOverSampleFft = ofxFft::create(windowSize, OF_FFT_WINDOW_HAMMING);
     
-    pitchShift = powf(2.0, 3.0 / 12.0);
+    pitchShift = powf(2.0, 12.0 / 12.0);
     pitchCount = 3;
     
     signalFftAmplitudes = new float[windowSize];
@@ -127,26 +127,26 @@ void PhaseVocoder::processWindow() {
     vector<float> outputWindow(windowSize);
     
     // apply window function to signal
-    for (int i = 0; i < windowSize; i++) {
-        window[i] = window[i] * analysisWindowBuffer[i];
-    }
-    
+//    for (int i = 0; i < windowSize; i++) {
+//        window[i] = window[i] * analysisWindowBuffer[i];
+//    }
+
     // execute forward FFT
     fft->setSignal(window);
     float* amplitudes = fft->getAmplitude();
     float* phases = fft->getPhase();
     
-    float* crossOverSampleAmplitudes;
-    float* crossOverSamplePhases;
-    if (hasCrossOverSample) {
-        crossOverSampleFft->setSignal(crossOverSampleWindow);
-        crossOverSampleAmplitudes = crossOverSampleFft->getAmplitude();
-        crossOverSamplePhases = crossOverSampleFft->getPhase();
-    }
-    
-    for (int i = 0; i < fftSize / 2; i++) {
-        signalFftAmplitudes[i] = amplitudes[i];
-    }
+//    float* crossOverSampleAmplitudes;
+//    float* crossOverSamplePhases;
+//    if (hasCrossOverSample) {
+//        crossOverSampleFft->setSignal(crossOverSampleWindow);
+//        crossOverSampleAmplitudes = crossOverSampleFft->getAmplitude();
+//        crossOverSamplePhases = crossOverSampleFft->getPhase();
+//    }
+//
+//    for (int i = 0; i < fftSize / 2; i++) {
+//        signalFftAmplitudes[i] = amplitudes[i];
+//    }
     
     // DO BLOCK PROCESSING
     
@@ -180,7 +180,7 @@ void PhaseVocoder::processWindow() {
 //    float pitchShiftFactor = ofMap(ofGetMouseX(), 0, ofGetWidth(), 0, 36);
 //    pitchShift = powf(2.0, pitchShiftFactor / 12.0);
     
-//    processBlock(amplitudes, phases); 
+    processBlock(amplitudes, phases);
     
     // Reverse FFT, set to output window
     fft->setPolar(amplitudes, phases);
@@ -188,11 +188,15 @@ void PhaseVocoder::processWindow() {
     for (int i = 0; i < windowSize / 2; i++) {
         outputWindow[i] += ifftSignal[i];
     }
+    
+    
 
    // write to output buffer
     for (int i = 0; i < window.size(); i++) {
         // apply the window function befroe writing to output
-        float windowSample = outputWindow[i] * analysisWindowBuffer[i];
+//        float windowSample = outputWindow[i] * analysisWindowBuffer[i];
+
+        float windowSample = outputWindow[i];
         outputBuffer->add(windowSample);
     }
 
@@ -205,11 +209,14 @@ void PhaseVocoder::processWindow() {
 void PhaseVocoder::processBlock(float *amplitudes, float *phases) {
     for(int n = 0; n <= fftSize/2; n++) {
         // Turn real and imaginary components into amplitude and phase
-//        float amplitude = amplitudeDelayLines[n].dl(amplitudes[n], 8000, 0.3);
-//        float phase = phaseDelayLines[n].dl(phases[n], 8000, 0.3);
         float amplitude = amplitudes[n];
         float phase = phases[n];
         
+//        if (amplitude < 0.0001) amplitude = 0;
+//        cout << amplitude << endl;
+//        float amplitude = amplitudes[n];
+//        float phase = phases[n];
+//
         // Calculate the phase difference in this bin between the last
         // hop and this one, which will indirectly give us the exact frequency
         float phaseDiff = phase - lastInputPhases[n];
@@ -237,6 +244,9 @@ void PhaseVocoder::processBlock(float *amplitudes, float *phases) {
         synthesisMagnitudes[n] = synthesisFrequencies[n] = 0;
     }
     
+    float pitchShiftFactor = ofMap(ofGetMouseX(), 0, ofGetWidth(), -24, 24);
+    pitchShift = powf(2.0, pitchShiftFactor / 12.0);
+    
     // Handle the pitch shift, storing frequencies into new bins
     for(int n = 0; n <= fftSize / 2; n++) {
         int newBin = n;//floorf(n * pitchShift + 0.5);
@@ -244,7 +254,7 @@ void PhaseVocoder::processBlock(float *amplitudes, float *phases) {
         // Ignore any bins that have shifted above Nyquist
         if (newBin <= fftSize / 2) {
             synthesisMagnitudes[newBin] += analysisMagnitudes[n];
-            synthesisFrequencies[newBin] = analysisFrequencies[n]; //* pitchShift;
+            synthesisFrequencies[newBin] = analysisFrequencies[n];// * pitchShift;
         }
     }
     

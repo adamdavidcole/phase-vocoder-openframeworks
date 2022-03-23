@@ -7,6 +7,8 @@
 #include "ofxShaderFilter.h"
 #include "CircularBuffer.hpp"
 #include "PhaseVocoder.hpp"
+#include "DelayLine.hpp"
+
 
 class ofApp : public ofBaseApp {
    public:
@@ -75,5 +77,7 @@ class ofApp : public ofBaseApp {
     int planeY;
     
     ofxShader shader;
+    
+//    DelayLine dl;
 };
 

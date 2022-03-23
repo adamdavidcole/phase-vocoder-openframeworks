@@ -69,6 +69,8 @@ void ofApp::setup() {
     
     channelMix = 0.5;
     
+    //// VISUALS
+    
     camWidth = 1280;
     camHeight = 720;
     
@@ -274,11 +276,17 @@ void ofApp::audioOut(float* buffer, int bufferSize, int nChannels) {
         phaseVocoder.addSample(sample);
 
         float currentSample = phaseVocoder.readSample();
+        
+//        dl.addSample(sample);
+//        currentSample = dl.getSample();
+        
+//        float currentSample = myTapOut->getSample();
+        
 //        currentSample = delayLine.dl(sample, 8000, 0.3);
 //        currentSample *= 3.0;
         
-        currentSample = currentSample * 10.0;
-        currentSample = ofClamp(currentSample, -1, 1);
+//        currentSample = currentSample * 10.0;
+//        currentSample = ofClamp(currentSample, -1, 1);
         
         buffer[i * nChannels + 0] = currentSample;
         buffer[i * nChannels + 1] = currentSample;
