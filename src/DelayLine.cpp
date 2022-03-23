@@ -4,24 +4,38 @@
 //
 //  Created by Adam Cole on 3/23/22.
 //
-
+#include <iostream>
+#include <math.h>
 #include "DelayLine.hpp"
 
 void DelayLine::setup(float _delayTime, float sampleRate) {
-    buffer.setSize(sampleRate * 10);
+    int MAX_DELAY = 3 * sampleRate;
+
+    buffer = new CircularBuffer(MAX_DELAY);
+//    buffer.setSize(sampleRate * MAX_DELAY);
     
-    float delayTime = _delayTime;
-    if (delayTime > 10) {
-        delayTime = 10;
+    int delayTime = floor(_delayTime);
+    if (delayTime > MAX_DELAY) {
+        delayTime = MAX_DELAY;
     }
     
-    buffer.shiftWritePoint(sampleRate * delayTime);
+//    buffer->shiftWritePoint(sampleRate * delayTime);
+    buffer->shiftWritePoint(delayTime);
+}
+
+float DelayLine::delay(float sample) {
+    buffer->push(sample);
+    return buffer->readAndClear();
+}
+
+float DelayLine::updateDelayTime(float delayTime) {
+    buffer->setReadPointRelativeToWritePoint(delayTime);
 }
 
 void DelayLine::addSample(float sample) {
-    buffer.push(sample);
+    buffer->push(sample);
 }
 
 float DelayLine::getSample() {
-    return buffer.readAndClear();
+    return buffer->read();
 }

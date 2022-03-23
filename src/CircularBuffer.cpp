@@ -33,6 +33,8 @@ void CircularBuffer::add(float val) {
 }
 
 void CircularBuffer::_addToBuffer(float val, bool shouldAdd) {
+    if (buffer.size() == 0) return;
+    
     if (shouldAdd) {
         float currVal = buffer[writePoint];
         buffer[writePoint] = (val + currVal) / 2.0;
@@ -57,6 +59,8 @@ float CircularBuffer::readAndClear() {
 }
 
 float CircularBuffer::_read(bool shouldClearAfterRead) {
+    if (buffer.size() == 0) return 0.0;
+    
     float val = buffer[readPoint];
     if (shouldClearAfterRead) {
         buffer[readPoint] = 0;
@@ -96,5 +100,11 @@ void CircularBuffer::shiftWritePoint(int shift) {
 }
 void CircularBuffer::shiftReadPoint(int shift) {
     int nextReadPoint = (readPoint + shift) % buffer.size();
+    readPoint = abs(nextReadPoint);
+}
+void CircularBuffer::setReadPointRelativeToWritePoint(int relativeShift) {
+    if (relativeShift < 0) return;
+    
+    int nextReadPoint = (writePoint - relativeShift) % buffer.size();
     readPoint = abs(nextReadPoint);
 }

@@ -17,9 +17,11 @@ public:
     void setup(float delayTime, float sampleRate);
     void addSample(float sample);
     float getSample();
+    float delay(float sample);
+    float updateDelayTime(float delayTime);
     
 private:
-    CircularBuffer buffer;
+    CircularBuffer* buffer;
 };
 
 #endif /* DelayLine_hpp */

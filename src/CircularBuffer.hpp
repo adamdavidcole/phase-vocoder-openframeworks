@@ -30,10 +30,11 @@ public:
     
     void shiftWritePoint(int shift);
     void shiftReadPoint(int shift);
+    void setReadPointRelativeToWritePoint(int relativeShift);
     
     std::vector<float> getWindow(int prevSamples);
     
-private:
+//private:
     std::vector<float> buffer;
     unsigned int writePoint;
     unsigned int readPoint;

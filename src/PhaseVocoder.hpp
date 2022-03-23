@@ -13,6 +13,7 @@
 #include "ofxMaxim.h"
 #include "ofxFft.h"
 #include "CircularBuffer.hpp"
+#include "DelayLine.hpp"
 
 class PhaseVocoder;
 
@@ -33,6 +34,9 @@ public:
     float readSample();
     void processWindow();
     void processBlock(float* amplitudes, float* phases);
+    
+    void processBlockWithPitchShift(float* amplitudes, float* phases);
+    void processBlockWithDelay(float* amplitudes, float* phases);
     void processBlockWithCrossover(float* amplitudes, float* phases, float* crossOverSampleAmplitudes, float* crossOverSamplePhases);
     void setPitchShift(float pitchShift);
 
@@ -87,9 +91,8 @@ private:
     maxiSample crossOverSample;
     bool hasCrossOverSample;
     
-    vector<maxiDelayline> amplitudeDelayLines;
-    vector<maxiDelayline> phaseDelayLines;
-    
+    vector<DelayLine*> amplitudeDelayLines;
+    vector<DelayLine*> phaseDelayLines;
 };
 
 #endif /* PhaseVocoder_hpp */
