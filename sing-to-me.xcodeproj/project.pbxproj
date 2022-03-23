@@ -939,11 +939,11 @@
 				E4B69E1E0A3A1BDC003C02F2 /* ofApp.cpp */,
 				E4B69E1F0A3A1BDC003C02F2 /* ofApp.h */,
 				7E1065DED2DEDCAAE9DDDA67 /* PhaseVocoder.hpp */,
+				2C3FBE7430BA4A7A26B74C32 /* PhaseVocoder.cpp */,
 				CD00567410D145DE2464DB2D /* smpPitchShift.hpp */,
 				2FAE4DE8E54EC744D3B03AB2 /* CircularBuffer.hpp */,
 				E74EC61A2C69EE8390B3BBBE /* smpPitchShift.cpp */,
 				F580E5532E2717C964E2BBE5 /* CircularBuffer.cpp */,
-				2C3FBE7430BA4A7A26B74C32 /* PhaseVocoder.cpp */,
 			);
 			path = src;
 			sourceTree = SOURCE_ROOT;

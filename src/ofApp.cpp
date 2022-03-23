@@ -16,7 +16,8 @@ void printFloatVector(vector<float> vec) {
 void ofApp::setup() {
 //    pianoSamp.load(ofToDataPath("piano-chrom.wav"));
 //    pianoSamp.load(ofToDataPath("test-sound.wav"));
-    pianoSamp.load(ofToDataPath("test-sound.wav"));
+//    pianoSamp.load(ofToDataPath("test-sound.wav"));
+    pianoSamp.load(ofToDataPath("whale-sound1.wav"));
 
     
     bufferSize = 512;
@@ -34,6 +35,7 @@ void ofApp::setup() {
     hopSize = windowSize / 2;
     
     phaseVocoder.setup(fftSize, windowSize, hopSize);
+//    phaseVocoder.setCrossOverSample(pianoSamp);
 //
 //    constQ.resize(128);
 //    chroma.resize(12);
@@ -272,11 +274,11 @@ void ofApp::audioOut(float* buffer, int bufferSize, int nChannels) {
         phaseVocoder.addSample(sample);
 
         float currentSample = phaseVocoder.readSample();
-//        currentSample = delayLine.dl(currentSample, 8000, 0.3);
+//        currentSample = delayLine.dl(sample, 8000, 0.3);
 //        currentSample *= 3.0;
         
         currentSample = currentSample * 10.0;
-        ofClamp(currentSample, -1, 1);
+        currentSample = ofClamp(currentSample, -1, 1);
         
         buffer[i * nChannels + 0] = currentSample;
         buffer[i * nChannels + 1] = currentSample;

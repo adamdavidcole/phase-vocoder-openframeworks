@@ -33,15 +33,20 @@ public:
     float readSample();
     void processWindow();
     void processBlock(float* amplitudes, float* phases);
+    void processBlockWithCrossover(float* amplitudes, float* phases, float* crossOverSampleAmplitudes, float* crossOverSamplePhases);
     void setPitchShift(float pitchShift);
 
     float pitchShift;
     
     ofxFft* fft;
+    ofxFft* crossOverSampleFft;
     float* signalFftAmplitudes;
     float* processedFftAmplitudes;
     
     int pitchCount;
+    
+    void setCrossOverSample(maxiSample sample);
+
 private:
     
     int fftSize;
@@ -50,6 +55,8 @@ private:
     
     CircularBuffer* inputBuffer;
     CircularBuffer* outputBuffer;
+    
+    CircularBuffer* crossOverSampleInputBuffer;
     
     // hold the phases from the previous hop of input samples
     vector<float> lastInputPhases;
@@ -69,12 +76,19 @@ private:
     vector<float> analysisWindowBuffer;
     
     vector<float> nextWindowToProcess;
+    vector<float> nextCrossOverSampleWindowToProcess;
     
     WindowProcessor windowProcessor;
     
 
     
     vector<float> binFrequencies;
+    
+    maxiSample crossOverSample;
+    bool hasCrossOverSample;
+    
+    vector<maxiDelayline> amplitudeDelayLines;
+    vector<maxiDelayline> phaseDelayLines;
     
 };
 
