@@ -35,8 +35,8 @@ public:
     void processWindow();
     void processBlock(float* amplitudes, float* phases, float* amplitudesOut, float* phasesOut);
     
-    void processBlockWithPitchShift(float* amplitudes, float* phases);
-    void processBlockWithDelay(float* amplitudes, float* phases);
+    void processBlockWithPitchShift(float* amplitudes, float* phases, float* amplitudesOut, float* phasesOut);
+    void processBlockWithDelay(float* amplitudes, float* phases, float* amplitudesOut, float* phasesOut);
     void processBlockWithCrossover(float* amplitudes, float* phases, float* crossOverSampleAmplitudes, float* crossOverSamplePhases);
     void setPitchShift(float pitchShift);
 
@@ -53,6 +53,8 @@ public:
     
     float glitchAmount;
     float glitchIntensity;
+    
+    void setRandomPitchShift();
 
 private:
     
@@ -87,6 +89,8 @@ private:
     
     vector<float> nextWindowToProcess;
     vector<float> nextCrossOverSampleWindowToProcess;
+    
+    vector<float> binDelays;
     
     WindowProcessor windowProcessor;
     

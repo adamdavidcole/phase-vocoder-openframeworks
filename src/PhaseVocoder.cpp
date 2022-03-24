@@ -69,6 +69,11 @@ void PhaseVocoder::setup(int _fftSize, int _windowSize, int _hopSize) {
         analysisWindowBuffer[i] =  0.5f * (1.0f - cosf(2.0 * M_PI * i / (float)(windowSize - 1)));
     }
     
+    binDelays.resize(fftSize/2 + 1);
+    for (int n = 0; n < binDelays.size(); n++) {
+        binDelays[n] = ofRandom(1.0);
+    }
+    
     windowProcessor.setup(this);
 
     fft = ofxFft::create(windowSize, OF_FFT_WINDOW_HAMMING);
@@ -159,8 +164,8 @@ void PhaseVocoder::processWindow() {
         
     vector<float> outputWindow(windowSize);
     
-    int pitchCount = ofMap(glitchAmount, 0, 0.75, 1, 30);
-//    int pitchCount = 0;
+//    int pitchCount = ofMap(glitchAmount, 0, 0.75, 1, 30);
+    int pitchCount = 2;
     
     // apply window function to signal
     if (pitchCount > 1) {
@@ -188,57 +193,70 @@ void PhaseVocoder::processWindow() {
     
     // DO BLOCK PROCESSING
     
-    // BEDIN MULTI-pitch shiftine
-    int pitchCountStart = 0;
-    int pitchCountEnd = pitchCount;
-    bool includeNegativePitches = false;
-    if (glitchAmount > 0.5) {
-        includeNegativePitches = true;
-
-        pitchCountStart = ofMap(glitchAmount, 0.5, 1, 3, -8);
-        pitchCountEnd = ofMap(glitchAmount, 0.5, 1, pitchCountStart + 1, 10);
+    // BEDIN MULTI-pitch shifting
+//    int pitchCountStart = 0;
+//    int pitchCountEnd = pitchCount;
+//    bool includeNegativePitches = false;
+//    if (glitchAmount > 0.5) {
+//        includeNegativePitches = true;
+//
+//        pitchCountStart = ofMap(glitchAmount, 0.5, 1, 3, -8);
+//        pitchCountEnd = ofMap(glitchAmount, 0.5, 1, pitchCountStart + 1, 10);
+//    }
+//
+//    if (pitchCount > 1) {
+//        for (int k = pitchCountStart; k < pitchCountEnd; k++) {
+//            float pitchShiftDistance = ofMap(glitchIntensity, 0, 1, 1, 3);
+//            int pitchShiftFactor = k * pitchShiftDistance;
+//            pitchShift = powf(2.0, k / 12.0);
+//
+//            processBlock(amplitudes, phases, amplitudesOut, phasesOut);
+//
+//            // execute the reverse FFT
+//            fft->setPolar(amplitudesOut, phasesOut);
+//            float* ifftSignal = fft->getSignal();
+//
+//            for (int i = 0; i < windowSize / 2; i++) {
+//                outputWindow[i] += ifftSignal[i];
+//            }
+//        }
+//        for (int i = 0; i < window.size(); i++) {
+//            // apply the window function befroe writing to output
+//    //        outputWindow[i] = (outputWindow[i]/(float)pitchCount);
+//        }
+//    } else {
+//        for (int i = 0; i < windowSize / 2; i++) {
+//            outputWindow[i] += window[i];
+//        }
+//    }
+    // END MULTI-pitch shifting
+    
+    // BEGIN DELAY
+//    int delayIterations = ofMap(glitchAmount, 0, 1, 1, 5);
+//    for (int i = 0; i < delayIterations; i++) {
+//        processBlockWithDelay(amplitudes, phases, amplitudesOut, phasesOut);
+//        fft->setPolar(amplitudesOut, phasesOut);
+//        float* ifftSignal = fft->getSignal();
+//        for (int i = 0; i < windowSize / 2; i++) {
+//            outputWindow[i] += ifftSignal[i];
+//        }
+//    }
+    // END DELAY
+    
+    
+    
+    
+    processBlockWithPitchShift(amplitudes, phases, amplitudesOut, phasesOut);
+    fft->setPolar(amplitudesOut, phasesOut);
+    float* ifftSignal = fft->getSignal();
+    for (int i = 0; i < windowSize / 2; i++) {
+        outputWindow[i] += ifftSignal[i] * 10.0;
     }
 
-    if (pitchCount > 1) {
-        for (int k = pitchCountStart; k < pitchCountEnd; k++) {
-            float pitchShiftDistance = ofMap(glitchIntensity, 0, 1, 1, 3);
-            int pitchShiftFactor = k * pitchShiftDistance;
-            pitchShift = powf(2.0, k / 12.0);
-
-            processBlock(amplitudes, phases, amplitudesOut, phasesOut);
-
-            // execute the reverse FFT
-            fft->setPolar(amplitudesOut, phasesOut);
-            float* ifftSignal = fft->getSignal();
-
-            for (int i = 0; i < windowSize / 2; i++) {
-                outputWindow[i] += ifftSignal[i];
-            }
-        }
-        for (int i = 0; i < window.size(); i++) {
-            // apply the window function befroe writing to output
-    //        outputWindow[i] = (outputWindow[i]/(float)pitchCount);
-        }
-    } else {
-        for (int i = 0; i < windowSize / 2; i++) {
-            outputWindow[i] += window[i];
-        }
-    }
-    // END MULTI-pitch shiftine
     
-//    processBlockWithDelay(amplitudes, phases);
-    
-//    float pitchShiftFactor = ofMap(ofGetMouseX(), 0, ofGetWidth(), 0, 36);
-//    pitchShift = powf(2.0, pitchShiftFactor / 12.0);
-    
-//    processBlockWithPitchShift(amplitudes, phases);
     
     // Reverse FFT, set to output window
-//    fft->setPolar(amplitudes, phases);
-//    float* ifftSignal = fft->getSignal();
-//    for (int i = 0; i < windowSize / 2; i++) {
-//        outputWindow[i] += ifftSignal[i];
-//    }
+   
 
    // write to output buffer
     for (int i = 0; i < window.size(); i++) {
@@ -359,7 +377,7 @@ void PhaseVocoder::processBlock(float *amplitudes, float *phases, float* amplitu
 
 // the following code/alogorithm from BelaPlatform:
 // https://github.com/BelaPlatform/bela-online-course/tree/master/lectures/lecture-20
-void PhaseVocoder::processBlockWithPitchShift(float *amplitudes, float *phases) {
+void PhaseVocoder::processBlockWithPitchShift(float *amplitudes, float *phases, float* amplitudesOut, float* phasesOut) {
     for(int n = 0; n <= fftSize/2; n++) {
         // Turn real and imaginary components into amplitude and phase
         float amplitude = amplitudes[n];
@@ -392,8 +410,6 @@ void PhaseVocoder::processBlockWithPitchShift(float *amplitudes, float *phases) 
         synthesisMagnitudes[n] = synthesisFrequencies[n] = 0;
     }
     
-//    float pitchShiftFactor = ofMap(ofGetMouseX(), 0, ofGetWidth(), -24, 24);
-//    pitchShift = powf(2.0, pitchShiftFactor / 12.0);
     
     // Handle the pitch shift, storing frequencies into new bins
     for(int n = 0; n <= fftSize / 2; n++) {
@@ -420,8 +436,8 @@ void PhaseVocoder::processBlockWithPitchShift(float *amplitudes, float *phases) 
         float outPhase = wrapPhase(lastOutputPhases[n] + phaseDiff);
         
         // Store the updated amplitude/phase
-        amplitudes[n] = synthesisMagnitudes[n];
-        phases[n] = outPhase;
+        amplitudesOut[n] = synthesisMagnitudes[n];
+        phasesOut[n] = outPhase;
         
         // Save the phase for the next hop
         lastOutputPhases[n] = outPhase;
@@ -432,7 +448,7 @@ void PhaseVocoder::processBlockWithPitchShift(float *amplitudes, float *phases) 
 
 // the following code/alogorithm from BelaPlatform:
 // https://github.com/BelaPlatform/bela-online-course/tree/master/lectures/lecture-20
-void PhaseVocoder::processBlockWithDelay(float *amplitudes, float *phases) {
+void PhaseVocoder::processBlockWithDelay(float *amplitudes, float *phases, float* amplitudesOut, float* phasesOut) {
     
 //    std::cout << "n: " << n << std::endl;
 //    amplitudeDelayLines[6]->addSample(amplitudes[0]);
@@ -449,10 +465,9 @@ void PhaseVocoder::processBlockWithDelay(float *amplitudes, float *phases) {
 //        float delayMax = ofMap(ofGetMouseX(), 0, ofGetWidth(), 0, 20);
 //        int delay = ofRandom(0, delayMax);
         int delayShift = 100;
-        float delayMax = ofMap(glitchIntensity, 0, 1, -delayShift, delayShift);
-//        int delay = ofRandom() * 120 * ofMap(n, 0, (float)fftSize/2, 0, 10) * glitchIntensity;
-        int delay = ofRandom(0, delayMax);
+        float delayMax = ofMap(glitchAmount, 0, 1, 0, delayShift);
 
+        int delay = binDelays[n] * delayMax;
 
         amplitudeDelayLines[n]->updateDelayTime(delay);
         phaseDelayLines[n]->updateDelayTime(delay);
@@ -519,8 +534,8 @@ void PhaseVocoder::processBlockWithDelay(float *amplitudes, float *phases) {
         float outPhase = wrapPhase(lastOutputPhases[n] + phaseDiff);
         
         // Store the updated amplitude/phase
-        amplitudes[n] = synthesisMagnitudes[n];
-        phases[n] = outPhase;
+        amplitudesOut[n] = synthesisMagnitudes[n];
+        phasesOut[n] = outPhase;
         
         // Save the phase for the next hop
         lastOutputPhases[n] = outPhase;
@@ -599,3 +614,10 @@ void PhaseVocoder::setPitchShift(float _pitchShift) {
     pitchShift = _pitchShift;
 }
 
+void PhaseVocoder::setRandomPitchShift() {
+   float maxShift = sin(ofGetElapsedTimeMillis()/1000) * ofMap(glitchIntensity, 0, 1, 0, 8);
+   float shiftStart = sin(ofGetElapsedTimeMillis()/1000) * ofMap(glitchAmount, 0, 1, 0, 8);
+   float pitchShiftFactor = shiftStart + maxShift;
+    
+   pitchShift = powf(2.0, pitchShiftFactor / 12.0);
+}

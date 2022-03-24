@@ -291,6 +291,7 @@ void ofApp::audioOut(float* buffer, int bufferSize, int nChannels) {
             recordedSamplesReadPoint += 1;
             if (recordedSamplesReadPoint >= recordedSamplesCount) {
                 recordedSamplesReadPoint = 0;
+                phaseVocoder.setRandomPitchShift();
             }
         }
         
