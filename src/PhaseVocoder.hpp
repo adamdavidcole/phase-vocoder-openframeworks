@@ -17,6 +17,13 @@
 
 class PhaseVocoder;
 
+enum PhaseVocoderMode {
+    simplePitchShift = 0,
+    multiPitchShift = 1,
+    delaySpectrum = 2,
+    crossOverSpectrum = 3,
+};
+
 class WindowProcessor : public ofThread {
 public:
     void setup(PhaseVocoder* _phaseVocoder);
@@ -55,7 +62,10 @@ public:
     float glitchIntensity;
     
     void setRandomPitchShift();
-
+    
+    PhaseVocoderMode currMode;
+    void setRandomMode();
+    void setMode(PhaseVocoderMode mode);
 private:
     
     int fftSize;

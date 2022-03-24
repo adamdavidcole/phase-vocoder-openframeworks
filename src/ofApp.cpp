@@ -21,6 +21,7 @@ float mapSquared(float value, float start1, float stop1, float start2, float sto
 
 //--------------------------------------------------------------
 void ofApp::setup() {
+    
     glitchIntensity = 0;
     glitchAmount = 0;
     feedbackAmount = 0;
@@ -292,6 +293,7 @@ void ofApp::audioOut(float* buffer, int bufferSize, int nChannels) {
             if (recordedSamplesReadPoint >= recordedSamplesCount) {
                 recordedSamplesReadPoint = 0;
                 phaseVocoder.setRandomPitchShift();
+                phaseVocoder.setRandomMode();
             }
         }
         

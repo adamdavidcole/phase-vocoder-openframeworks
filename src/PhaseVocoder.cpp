@@ -40,6 +40,9 @@ void PhaseVocoder::setup(int _fftSize, int _windowSize, int _hopSize) {
     fftSize = _fftSize;
     windowSize = _windowSize;
     hopSize = _hopSize;
+    currMode = delaySpectrum;
+    
+    
 
     int bufferSize = 2 * windowSize;
     
@@ -165,10 +168,11 @@ void PhaseVocoder::processWindow() {
     vector<float> outputWindow(windowSize);
     
 //    int pitchCount = ofMap(glitchAmount, 0, 0.75, 1, 30);
-    int pitchCount = 2;
+    int pitchCount = ofMap(glitchAmount, 0, 0.75, 1, 30);
+    bool shouldApplyWindow = currMode == simplePitchShift || (currMode == multiPitchShift && pitchCount > 1);
     
     // apply window function to signal
-    if (pitchCount > 1) {
+    if (shouldApplyWindow) {
         for (int i = 0; i < windowSize; i++) {
             window[i] = window[i] * analysisWindowBuffer[i];
         }
@@ -178,95 +182,84 @@ void PhaseVocoder::processWindow() {
     fft->setSignal(window);
     float* amplitudes = fft->getAmplitude();
     float* phases = fft->getPhase();
-        
-//    float* crossOverSampleAmplitudes;
-//    float* crossOverSamplePhases;
-//    if (hasCrossOverSample) {
-//        crossOverSampleFft->setSignal(crossOverSampleWindow);
-//        crossOverSampleAmplitudes = crossOverSampleFft->getAmplitude();
-//        crossOverSamplePhases = crossOverSampleFft->getPhase();
-//    }
-//
-//    for (int i = 0; i < fftSize / 2; i++) {
-//        signalFftAmplitudes[i] = amplitudes[i];
-//    }
+    
     
     // DO BLOCK PROCESSING
+    if (currMode == simplePitchShift) {
+        processBlockWithPitchShift(amplitudes, phases, amplitudesOut, phasesOut);
+        
+        // Reverse FFT, set to output window
+        fft->setPolar(amplitudesOut, phasesOut);
+        float* ifftSignal = fft->getSignal();
+        for (int i = 0; i < windowSize / 2; i++) {
+            outputWindow[i] += ifftSignal[i] * 10.0;
+        }
+    } else if (currMode == multiPitchShift) {
+        // BEDIN MULTI-pitch shifting
+        int pitchCountStart = 0;
+        int pitchCountEnd = pitchCount;
+        bool includeNegativePitches = false;
+        if (glitchAmount > 0.5) {
+            includeNegativePitches = true;
+            pitchCountStart = ofMap(glitchAmount, 0.5, 1, 3, -8);
+            pitchCountEnd = ofMap(glitchAmount, 0.5, 1, pitchCountStart + 1, 10);
+        }
     
-    // BEDIN MULTI-pitch shifting
-//    int pitchCountStart = 0;
-//    int pitchCountEnd = pitchCount;
-//    bool includeNegativePitches = false;
-//    if (glitchAmount > 0.5) {
-//        includeNegativePitches = true;
-//
-//        pitchCountStart = ofMap(glitchAmount, 0.5, 1, 3, -8);
-//        pitchCountEnd = ofMap(glitchAmount, 0.5, 1, pitchCountStart + 1, 10);
-//    }
-//
-//    if (pitchCount > 1) {
-//        for (int k = pitchCountStart; k < pitchCountEnd; k++) {
-//            float pitchShiftDistance = ofMap(glitchIntensity, 0, 1, 1, 3);
-//            int pitchShiftFactor = k * pitchShiftDistance;
-//            pitchShift = powf(2.0, k / 12.0);
-//
-//            processBlock(amplitudes, phases, amplitudesOut, phasesOut);
-//
-//            // execute the reverse FFT
-//            fft->setPolar(amplitudesOut, phasesOut);
-//            float* ifftSignal = fft->getSignal();
-//
-//            for (int i = 0; i < windowSize / 2; i++) {
-//                outputWindow[i] += ifftSignal[i];
-//            }
-//        }
-//        for (int i = 0; i < window.size(); i++) {
-//            // apply the window function befroe writing to output
-//    //        outputWindow[i] = (outputWindow[i]/(float)pitchCount);
-//        }
-//    } else {
-//        for (int i = 0; i < windowSize / 2; i++) {
-//            outputWindow[i] += window[i];
-//        }
-//    }
-    // END MULTI-pitch shifting
+        if (pitchCount > 1) {
+            for (int k = pitchCountStart; k < pitchCountEnd; k++) {
+                float pitchShiftDistance = ofMap(glitchIntensity, 0, 1, 1, 3);
+                int pitchShiftFactor = k * pitchShiftDistance;
+                pitchShift = powf(2.0, k / 12.0);
     
-    // BEGIN DELAY
-//    int delayIterations = ofMap(glitchAmount, 0, 1, 1, 5);
-//    for (int i = 0; i < delayIterations; i++) {
-//        processBlockWithDelay(amplitudes, phases, amplitudesOut, phasesOut);
-//        fft->setPolar(amplitudesOut, phasesOut);
-//        float* ifftSignal = fft->getSignal();
-//        for (int i = 0; i < windowSize / 2; i++) {
-//            outputWindow[i] += ifftSignal[i];
-//        }
-//    }
-    // END DELAY
+                processBlock(amplitudes, phases, amplitudesOut, phasesOut);
     
-    
-    
-    
-    processBlockWithPitchShift(amplitudes, phases, amplitudesOut, phasesOut);
-    fft->setPolar(amplitudesOut, phasesOut);
-    float* ifftSignal = fft->getSignal();
-    for (int i = 0; i < windowSize / 2; i++) {
-        outputWindow[i] += ifftSignal[i] * 10.0;
+                // execute the reverse FFT
+                fft->setPolar(amplitudesOut, phasesOut);
+                float* ifftSignal = fft->getSignal();
+                for (int i = 0; i < windowSize / 2; i++) {
+                    outputWindow[i] += ifftSignal[i];
+                }
+            }
+        } else {
+            for (int i = 0; i < windowSize / 2; i++) {
+                outputWindow[i] += window[i];
+            }
+        }
+        // END MULTI-pitch shifting
+    } else if (currMode == delaySpectrum) {
+        // BEGIN DELAY
+        int delayIterations = ofMap(glitchAmount, 0, 1, 1, 5);
+        for (int i = 0; i < delayIterations; i++) {
+            processBlockWithDelay(amplitudes, phases, amplitudesOut, phasesOut);
+            
+            // Reverse FFT, set to output window
+            fft->setPolar(amplitudesOut, phasesOut);
+            float* ifftSignal = fft->getSignal();
+            for (int i = 0; i < windowSize / 2; i++) {
+                outputWindow[i] += ifftSignal[i];
+            }
+        }
+        // END DELAY
+    } else if (currMode == crossOverSpectrum) {
+        // TODO: crossover mode
+        //    float* crossOverSampleAmplitudes;
+        //    float* crossOverSamplePhases;
+        //    if (hasCrossOverSample) {
+        //        crossOverSampleFft->setSignal(crossOverSampleWindow);
+        //        crossOverSampleAmplitudes = crossOverSampleFft->getAmplitude();
+        //        crossOverSamplePhases = crossOverSampleFft->getPhase();
+        //    }
     }
-
-    
-    
-    // Reverse FFT, set to output window
    
 
    // write to output buffer
     for (int i = 0; i < window.size(); i++) {
         // apply the window function befroe writing to output
         float windowSample = outputWindow[i];// * analysisWindowBuffer[i];
-        if (pitchCount > 1) {
+        if (shouldApplyWindow) {
             windowSample *= analysisWindowBuffer[i];
         }
         
-//        float windowSample = outputWindow[i];
         outputBuffer->add(windowSample);
     }
 
@@ -615,9 +608,26 @@ void PhaseVocoder::setPitchShift(float _pitchShift) {
 }
 
 void PhaseVocoder::setRandomPitchShift() {
+   if (currMode != simplePitchShift) return;
+    
    float maxShift = sin(ofGetElapsedTimeMillis()/1000) * ofMap(glitchIntensity, 0, 1, 0, 8);
    float shiftStart = sin(ofGetElapsedTimeMillis()/1000) * ofMap(glitchAmount, 0, 1, 0, 8);
    float pitchShiftFactor = shiftStart + maxShift;
     
    pitchShift = powf(2.0, pitchShiftFactor / 12.0);
+}
+
+void PhaseVocoder::setMode(PhaseVocoderMode mode) {
+    currMode = mode;
+}
+
+void PhaseVocoder::setRandomMode() {
+    float rand = ofRandom(1.0);
+    if (rand < 0.33) {
+        currMode = multiPitchShift;
+    } else if (rand < 0.66) {
+        currMode = multiPitchShift;
+    } else {
+        currMode = delaySpectrum;
+    }
 }
