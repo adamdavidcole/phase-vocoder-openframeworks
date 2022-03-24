@@ -50,6 +50,9 @@ public:
     int pitchCount;
     
     void setCrossOverSample(maxiSample sample);
+    
+    float glitchAmount;
+    float glitchIntensity;
 
 private:
     

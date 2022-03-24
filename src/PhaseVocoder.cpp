@@ -19,6 +19,9 @@ void WindowProcessor::threadedFunction() {
 //---------------------------------
 
 PhaseVocoder::~PhaseVocoder() {
+    glitchAmount = 0;
+    glitchIntensity = 0;
+    
     delete inputBuffer;
     delete outputBuffer;
     delete crossOverSampleInputBuffer;
@@ -146,9 +149,13 @@ void PhaseVocoder::processWindow() {
         
     vector<float> outputWindow(windowSize);
     
+    int pitchCount = ofMap(glitchAmount, 0, 0.75, 1, 30);
+
     // apply window function to signal
-    for (int i = 0; i < windowSize; i++) {
-        window[i] = window[i] * analysisWindowBuffer[i];
+    if (pitchCount > 1) {
+        for (int i = 0; i < windowSize; i++) {
+            window[i] = window[i] * analysisWindowBuffer[i];
+        }
     }
 
     // execute forward FFT
@@ -171,25 +178,47 @@ void PhaseVocoder::processWindow() {
     // DO BLOCK PROCESSING
     
     // BEDIN MULTI-pitch shiftine
-    int pitchCount = ofMap(ofGetMouseY(), 0, ofGetHeight(), 20, 1);
-    float pitchShiftDistance = ofMap(ofGetMouseX(), 0, ofGetWidth(), 0, 36);
-    for (int k = 0; k < pitchCount; k++) {
-        float pitchShiftFactor = k * pitchShiftDistance;
-        pitchShift = powf(2.0, pitchShiftFactor / 12.0);
-
-        processBlock(amplitudes, phases);
-
-        // execute the reverse FFT
-        fft->setPolar(amplitudes, phases);
-        float* ifftSignal = fft->getSignal();
-
-        for (int i = 0; i < windowSize / 2; i++) {
-            outputWindow[i] += ifftSignal[i];
-        }
+//    int pitchCount = 1; //+ floor(2 * glitchIntensity);
+    
+    int pitchCountStart = 0;
+    int pitchCountEnd = pitchCount;
+    bool includeNegativePitches = false;
+    if (glitchAmount > 0.5) {
+        includeNegativePitches = true;
+        
+        
+        
+        pitchCountStart = ofMap(glitchAmount, 0.5, 1, 3, -8);
+        pitchCountEnd = ofMap(glitchAmount, 0.5, 1, pitchCountStart + 1, 10);
+//        pitchCountEnd = 0;
     }
-    for (int i = 0; i < window.size(); i++) {
-        // apply the window function befroe writing to output
-//        outputWindow[i] = (outputWindow[i]/(float)pitchCount);
+    
+    
+    
+    if (pitchCount > 1) {
+        for (int k = pitchCountStart; k < pitchCountEnd; k++) {
+            float pitchShiftDistance = ofMap(glitchIntensity, 0, 1, 1, 3);
+            int pitchShiftFactor = k * pitchShiftDistance;
+            pitchShift = powf(2.0, k / 12.0);
+            
+            processBlock(amplitudes, phases);
+            
+            // execute the reverse FFT
+            fft->setPolar(amplitudes, phases);
+            float* ifftSignal = fft->getSignal();
+
+            for (int i = 0; i < windowSize / 2; i++) {
+                outputWindow[i] += ifftSignal[i];
+            }
+        }
+        for (int i = 0; i < window.size(); i++) {
+            // apply the window function befroe writing to output
+    //        outputWindow[i] = (outputWindow[i]/(float)pitchCount);
+        }
+    } else {
+        for (int i = 0; i < windowSize / 2; i++) {
+            outputWindow[i] += window[i];
+        }
     }
     // END MULTI-pitch shiftine
     
@@ -208,8 +237,11 @@ void PhaseVocoder::processWindow() {
    // write to output buffer
     for (int i = 0; i < window.size(); i++) {
         // apply the window function befroe writing to output
-        float windowSample = outputWindow[i] * analysisWindowBuffer[i];
-
+        float windowSample = outputWindow[i];// * analysisWindowBuffer[i];
+        if (pitchCount > 1) {
+            windowSample *= analysisWindowBuffer[i];
+        }
+        
 //        float windowSample = outputWindow[i];
         outputBuffer->add(windowSample);
     }
@@ -236,13 +268,18 @@ void PhaseVocoder::processBlock(float *amplitudes, float *phases) {
 
 //
         int delayShift = 100;
-        float delayMax = ofMap(ofGetMouseX(), 0, ofGetWidth(), -delayShift, delayShift);
-        int delay = ofRandom(0, abs(delayMax));
-        amplitudeDelayLines[n]->updateDelayTime(delay);
-        phaseDelayLines[n]->updateDelayTime(delay);
-        amplitude = amplitudeDelayLines[n]->delay(amplitude);
-        phase = phaseDelayLines[n]->delay(phase);
-//
+//        float delayMax = ofMap(ofGetMouseX(), 0, ofGetWidth(), -delayShift, delayShift);
+//        int delay = ofRandom(0, abs(delayMax));
+        float delayMax = ofMap(glitchIntensity, 0, 1, -delayShift, delayShift);
+        int delay = ofRandom(0, delayMax);
+        
+        delay = 0;
+        
+//        amplitudeDelayLines[n]->updateDelayTime(delay);
+//        phaseDelayLines[n]->updateDelayTime(delay);
+//        amplitude = amplitudeDelayLines[n]->delay(amplitude);
+//        phase = phaseDelayLines[n]->delay(phase);
+////
 //        std::cout << "Amp out: "<< amplitude << std::endl;
         
 //        if (amplitude < 0.0001) amplitude = 0;
@@ -276,9 +313,9 @@ void PhaseVocoder::processBlock(float *amplitudes, float *phases) {
     for(int n = 0; n <= fftSize / 2; n++) {
         synthesisMagnitudes[n] = synthesisFrequencies[n] = 0;
     }
-    
-    float pitchShiftFactor = ofMap(ofGetMouseX(), 0, ofGetWidth(), -24, 24);
-    pitchShift = powf(2.0, pitchShiftFactor / 12.0);
+//
+//    float pitchShiftFactor = ofMap(ofGetMouseX(), 0, ofGetWidth(), -24, 24);
+//    pitchShift = powf(2.0, pitchShiftFactor / 12.0);
     
     // Handle the pitch shift, storing frequencies into new bins
     for(int n = 0; n <= fftSize / 2; n++) {
