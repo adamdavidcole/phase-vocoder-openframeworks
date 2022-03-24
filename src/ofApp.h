@@ -82,6 +82,8 @@ class ofApp : public ofBaseApp {
     float glitchAmount;
     float feedbackAmount;
     
+    void cleanRecording();
+    bool hasCleanedRecording;
 //    DelayLine dl;
 };
 

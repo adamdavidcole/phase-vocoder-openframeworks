@@ -55,28 +55,12 @@ void ofApp::setup() {
         ofSoundStreamSetup(2, 1, this, sampleRate, bufferSize, 4);
     }
     
-    CircularBuffer testBuffer(8);
-    
-    testBuffer.push(0);
-    testBuffer.push(1);
-    testBuffer.push(2);
-    testBuffer.push(3);
-    testBuffer.push(4);
-    testBuffer.push(5);
-    testBuffer.push(6);
-    testBuffer.push(7);
-    testBuffer.push(8);
-    testBuffer.push(9);
-    testBuffer.push(10);
-        
-    vector<float> window = testBuffer.getWindow(6);
-    printFloatVector(window);
-    
     recordedSamplesSize = sampleRate * 5;
     recordedSamplesCount = 0;
     recordedSamplesReadPoint = 0;
     recordedSamples.resize(recordedSamplesSize);
     isRecording = false;
+    hasCleanedRecording = false;
     
     channelMix = 0.5;
     
@@ -325,6 +309,9 @@ void ofApp::keyPressed(int key) {
         cout << "Begin recording" << endl;
         recordedSamplesCount = 0;
         recordedSamplesReadPoint = 0;
+        recordedSamples.clear();
+        recordedSamples.resize(recordedSamplesSize);
+        hasCleanedRecording = false;
         isRecording = true;
     }
     
@@ -374,7 +361,10 @@ void ofApp::keyReleased(int key) {
     if (key == ' ') {
         cout << "End recording" << endl;
         isRecording = false;
+        cleanRecording();
     }
+    
+    
     
     if (key == 'c') {
         shouldClearFeedbackImg = false;
@@ -400,6 +390,57 @@ void ofApp::mouseMoved(int x, int y) {
 //    int r = ofMap(x, 0, ofGetWidth(), 0, 255);
 //    int b = ofMap(y, 0, ofGetHeight(), 0, 255);
 //    ofSetColor(r, abs(r - b), b);
+}
+
+
+// clean white space at beginning end of sample buffer
+void ofApp::cleanRecording() {
+    if (hasCleanedRecording) return;
+    hasCleanedRecording = true;
+    
+    cout << "Begin cleaned recording" << endl;
+    
+    // amount to shave off start/end
+    int cleanFromStart = (float)sampleRate / 10.0;
+    int cleanFromEnd = (float)sampleRate / 10.0;
+   
+    // get avg sample value
+    float sum = 0;
+    for (int i = 0; i < recordedSamplesCount; i++) {
+        sum += abs(recordedSamples[i]);
+    }
+    float avgSample = sum / (float)recordedSamplesCount;
+    
+    // use average sample value to guestimate how much more to shave off beginning/end
+    int removeFromStart = cleanFromStart;
+    for (int i = cleanFromStart; i < recordedSamplesCount && abs(recordedSamples[i]) < avgSample/2.0; i++) {
+        removeFromStart++;
+    }
+    
+    int removeFromEnd = cleanFromEnd;
+    for (int i = recordedSamplesCount - 1 - cleanFromEnd; i >= 0 && abs(recordedSamples[i]) < avgSample/2.0; i--) {
+        removeFromEnd++;
+    }
+    
+    int cleanedSamplesLength = recordedSamplesCount - removeFromStart - removeFromEnd - cleanFromEnd;
+    if (cleanedSamplesLength <= 0) return;
+    
+    // get new sample buffer with clean start/end
+    vector<float> cleanedSamples(cleanedSamplesLength);
+    for (int i = 0; i < cleanedSamplesLength; i++) {
+        cleanedSamples[i] = recordedSamples[i + removeFromStart];
+    }
+    
+    cout << "Avg sample: " << avgSample << endl;
+    cout << "removeFromStart: " << removeFromStart << endl;
+    cout << "removeFromEnd: " << removeFromEnd<< endl;
+    cout << "Total samples: " << recordedSamplesCount << endl;
+    cout << "Cleaned samples length: " << cleanedSamplesLength<< endl;
+
+    // save the cleaned buffer
+    recordedSamplesCount = cleanedSamplesLength;
+    recordedSamples = cleanedSamples;
+    cout << "Has cleaned recording" << endl;
 }
 
 //--------------------------------------------------------------
