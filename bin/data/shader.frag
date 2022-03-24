@@ -14,6 +14,10 @@ uniform float u_red;
 //uniform sampler2DRect inputTexture;
 //uniform sampler2DRect tex1;
 //
+uniform float glitchIntensity;
+uniform float glitchAmount;
+uniform float feedbackAmount;
+
 uniform sampler2DRect inputTexture;
 uniform sampler2DRect feedbackTexture;
 
@@ -63,6 +67,12 @@ vec3 blendPinLight(vec3 base, vec3 blend, float opacity) {
 
 float map(float value, float min1, float max1, float min2, float max2) {
   return min2 + (value - min1) * (max2 - min2) / (max1 - min1);
+}
+
+float mapSquared(float value, float start1, float stop1, float start2, float stop2) {
+  float inT = map(value, start1, stop1, 0, 1);
+  float outT = inT * inT;
+  return map(outT, 0, 1, start2, stop2);
 }
 
 float rand(vec2 n) {
@@ -178,9 +188,9 @@ vec4 lightning() {
 
     vec4 currColor = texture2D(inputTexture, varyingtexcoord);
 
-    vec3 textured = mod(vec3(currColor), vec4(uv, n).xyz);
+    vec3 textured = mod(vec3(currColor) * glitchIntensity, vec4(uv, n).xyz);
 
-    if (r > 95) {
+    if (r > 100 * (1.0 - glitchIntensity)) {
         return vec4(textured, 1.0);
     }
 
@@ -188,12 +198,17 @@ vec4 lightning() {
 }
 
 vec4 full_noise() {
-    vec3 noisePattern = vec3(fract(sin(dot(fract(vec2(random(varyingtexcoord * 50))), vec2(28, 312)))));
+    vec3 noisePattern = vec3(fract(sin(dot(fract(vec2(random(varyingtexcoord * 50 * glitchIntensity))), vec2(28, 312)))));
 
 //    randomNoise
 //    float noise = rand(varyingtexcoord + rand(vec2(u_time * rand())));
 
-    return vec4(noisePattern, 1.0);
+    float r = rand() * 100.0;
+    if (r > 100 * (1.0 - glitchIntensity)) {
+        return vec4(noisePattern, 1.0);
+    } else {
+        return texture2D(inputTexture, varyingtexcoord);
+    }
 }
 
 vec4 horizontal_lines() {
@@ -201,7 +216,7 @@ vec4 horizontal_lines() {
     vec2 uv = varyingtexcoord / u_res;
 
     //generate black horizontal lines
-    if (mod(uv.y, 0.9) < cos(r) + 0.05 && mod(uv.y, 0.95) > cos(r) && fract(u_time * 0.1) > -0.01 && uv.x < cos(r) + 0.6 && uv.x > cos(r) - 0.6)
+    if (mod(uv.y, 0.9 * glitchIntensity) < cos(r) + 0.05 && mod(uv.y, 0.95 * glitchIntensity) > cos(r) && fract(u_time * 0.1) > -0.01 && uv.x < cos(r) + 0.6 && uv.x > cos(r) - 0.6)
     {
         return texture(inputTexture, vec2(cos(u_time)*u_res.x, floor(r) * u_res.y));
     }
@@ -212,9 +227,31 @@ vec4 vertical_lines() {
     //generate black vertical lines
     float r = rand() * 100.0;
     vec2 uv = varyingtexcoord / u_res;
-    if (mod(uv.x, 0.9) < cos(r) + 0.04 && mod(uv.x, 0.95) > cos(r) && r > 80) {
+    
+    if (mod(uv.x, 0.9) < cos(r) + 0.04 && mod(uv.x, 0.95) > cos(r) && r > (1 - glitchIntensity)) {
         return texture2D(inputTexture, vec2(cos(u_time) * u_res.x, floor(u_time * 0.05) * u_res.y));
     }
+    return texture2D(inputTexture, varyingtexcoord);
+}
+
+vec4 small_blocks()
+{
+    vec2 uv = varyingtexcoord / u_res;
+    
+    //shift small blocks
+    float r = rand() * 100.0;
+    float x_sup = random(vec2(floor(mod(r, 40) * uv.y), u_time));
+    float x_inf = x_sup - 0.2 * glitchIntensity - 0.2;
+    float y_sup = random(vec2(floor(23 * vec2(r, u_time).x), u_time));
+    float y_inf = y_sup - 0.2 * glitchIntensity - 0.2;
+
+    if (uv.x < x_sup && uv.x > x_inf && uv.y < y_sup && uv.y > y_inf && r < 20)
+    {
+        vec4 new_texture = texture(inputTexture, (varyingtexcoord + vec2(random(vec2(floor(varyingtexcoord.y) * 0.01)), random(vec2(fract(2 * varyingtexcoord.y))))) + vec2(100)*glitchIntensity);
+        return vec4(new_texture);
+    }
+    
+//    return vec4(1.0, 0, 0, 1.0);
     return texture2D(inputTexture, varyingtexcoord);
 }
 
@@ -223,7 +260,7 @@ vec4 rgbShift() {
     float r = rand();
     vec2 noiseInput = vec2(u_time, u_time);
     float n = noise(noiseInput);
-    float shiftX = r * (50.0 * n);
+    float shiftX = r * (n * 1000.0 * glitchIntensity);
 
     float shiftY = rand(vec2(r, r)) * 20.0 * n;
 
@@ -237,8 +274,8 @@ vec4 rgbShift() {
 
 vec4 vertical_shift() {
     vec2 newCoords = varyingtexcoord;
-    if ((varyingtexcoord.y/u_res.y)  < (1 - fract(u_time * 0.8)) && rand() < 0.1) {
-        newCoords.x += 0.01 * u_res.x;
+    if ((varyingtexcoord.y/u_res.y)  < (1 - fract(u_time * 0.8)) && rand() < 0.5 * glitchIntensity) {
+        newCoords.x += 0.01 * u_res.x + 100 * glitchIntensity;
     }
     return texture2D(inputTexture, newCoords);
 }
@@ -248,18 +285,20 @@ vec4 glitchColor() {
     vec4 outputColor = vec4(0.0);
     float r = rand(vec2(rand(), rand()));
 
-    if (r < 0.3) {
+    if (r < 0.3 * glitchAmount) {
         outputColor = rgbShift();
-    } else if (r < 0.5) {
+    } else if (r < 0.5 * glitchAmount) {
         outputColor = vertical_shift();
-//    } else if (r < 0.51) {
-//        outputColor = full_noise();
-    } else if (r < 0.6) {
+    } else if (r < 0.51 * glitchAmount) {
+        outputColor = full_noise();
+    } else if (r < 0.6 * glitchAmount) {
         outputColor = horizontal_lines();
-    } else if (r < 0.75) {
+    } else if (r < 0.7 * glitchAmount) {
         outputColor = vertical_lines();
-    } else if (r < 0.8) {
+    } else if (r < 0.75 * glitchAmount) {
         outputColor = lightning();
+    } else if (r < 1.0 * glitchAmount) {
+        outputColor = small_blocks();
     } else {
         outputColor = texture2D(inputTexture, varyingtexcoord);
     }
@@ -289,7 +328,7 @@ void main(){
     vec4 feedbackColor = texture2D(feedbackTexture, feedbackNoisePosClamped);
     vec4 glitchColor = glitchColor();
     
-    vec3 classicCombo = mix(inputColor.xyz, feedbackColor.xyz, .8);
+    vec3 classicCombo = mix(glitchColor.xyz, feedbackColor.xyz, feedbackAmount);
 //    vec3 combo2 = mix(glitchColor.xyz, classicCombo.xyz, 0.5);
 
     

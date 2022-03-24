@@ -78,6 +78,10 @@ class ofApp : public ofBaseApp {
     
     ofxShader shader;
     
+    float glitchIntensity;
+    float glitchAmount;
+    float feedbackAmount;
+    
 //    DelayLine dl;
 };
 
