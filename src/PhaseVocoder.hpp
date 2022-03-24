@@ -33,7 +33,7 @@ public:
     void addSample(float sample);
     float readSample();
     void processWindow();
-    void processBlock(float* amplitudes, float* phases);
+    void processBlock(float* amplitudes, float* phases, float* amplitudesOut, float* phasesOut);
     
     void processBlockWithPitchShift(float* amplitudes, float* phases);
     void processBlockWithDelay(float* amplitudes, float* phases);
@@ -78,6 +78,9 @@ private:
     vector<float> synthesisFrequencies;
     float* synthesisMagnitudes;
     float* synthesisPhases;
+    
+    float* amplitudesOut;
+    float* phasesOut;
     
     // Hann window values
     vector<float> analysisWindowBuffer;
