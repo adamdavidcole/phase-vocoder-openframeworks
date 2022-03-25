@@ -186,7 +186,6 @@ void ofApp::update() {
 
             float phase = ofMap(sin(ellapsedTime* 5.0 * progress), -1, 1, 0, phaseTwoMaxDistortion) * (progress + 0.25);
 
-//            float glitchAmountStartIncrease ofMap()
             glitchAmount = phase;
             glitchIntensity = phase;
             
@@ -196,21 +195,48 @@ void ofApp::update() {
             float pitchShiftDegree = floor(ofMap(glitchAmount, 0, phaseTwoMaxDistortion, 0, 12));
             if (ofRandom(1.0) > 0.5) pitchShiftDegree*= -1;
             float pitchShfit = powf(2.0, (int)pitchShiftDegree / 12.0);
-    //
+
             phaseVocoder.setMode(simplePitchShift);
             phaseVocoder.setPitchShift(pitchShfit);
-            
-//            setPhaseVocoderMode();
-
-            //mapSquared(glitchAmount, 0, phaseTwoMaxDistortion, 0, phaseTwoMaxDistortion);
         }
             break;
-//        case AppState::RUNNING_PHASE_THREE:
-//        {
-//            float phaseThreeStart = 15;
-//            float phaseThreeDuration = 15;
-//            float phaseThreeMinDistortion = 0.35;
-//            float phaseThreeMaxDistortion = 0.75;
+        case AppState::RUNNING_PHASE_THREE:
+        {
+            float phaseThreeStart = 15;
+            float phaseThreeDuration = 15;
+            float phaseThreeMinDistortion = 0.4;
+            float phaseThreeMaxDistortion = 0.8;
+            float progress = ofMap(ellapsedTime, phaseThreeStart, phaseThreeStart + phaseThreeDuration, 0, 1);
+            
+            float phase = ofMap(sin(ellapsedTime* 5.0 * progress), -1, 1, phaseThreeMinDistortion, phaseThreeMaxDistortion) * (progress + 0.25);
+
+            glitchAmount = phase;
+            glitchIntensity = phase;
+            
+            phaseVocoder.glitchAmount = glitchAmount;
+            phaseVocoder.glitchIntensity = glitchIntensity;
+            
+
+            float randomVocoderMore = ofRandom(1.0);
+            if (randomVocoderMore < 0.2) {
+                float pitchShiftDegree = floor(ofMap(glitchAmount, phaseThreeMinDistortion, phaseThreeMaxDistortion, 6, 18));
+                if (ofRandom(1.0) > 0.5) {pitchShiftDegree*= -1;}
+                pitchShiftDegree = ofClamp(pitchShiftDegree, -6, 18);
+                float pitchShfit = powf(2.0, (int)pitchShiftDegree / 12.0);
+            } else {
+                phaseVocoder.setMode(multiPitchShift);
+            }
+            
+            float randomSampleSkipVal = ofRandom(1.0);
+            if (randomSampleSkipVal < 0.02) {
+                randomSampleSkip();
+            }
+           
+            
+//            phaseVocoder.setPitchShift(pitchShfit);
+            
+            
+            
 //
 //            float progress = ofMap(ellapsedTime - phaseThreeStart, 0, phaseThreeDuration, 0, 1);
 //
@@ -218,9 +244,9 @@ void ofApp::update() {
 //
 //            glitchAmount = phase;
 //            glitchIntensity = mapSquared(glitchAmount, phaseThreeMinDistortion, phaseThreeMaxDistortion, phaseThreeMinDistortion, phaseThreeMaxDistortion);
-//        }
+        }
 //
-//             break;
+             break;
 //        case AppState::RUNNING_PHASE_FOUR:
 //        {
 //            float phaseFourStart = 30;
@@ -565,6 +591,11 @@ bool ofApp::isRunningPhases() {
            currState == AppState::RUNNING_PHASE_FOUR ||
            currState == AppState::RUNNING_PHASE_FIVE ||
            currState == AppState::RUNNING_PHASE_SIX;
+}
+
+void ofApp::randomSampleSkip() {
+    int newReadPoint = floor(ofRandom(recordedSamplesCount));
+    recordedSamplesReadPoint = newReadPoint;
 }
 
 // clean white space at beginning end of sample buffer

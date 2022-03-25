@@ -39,6 +39,7 @@ class ofApp : public ofBaseApp {
     float phaseStartTime;
     void beginRunningPhases();
     bool isRunningPhases();
+    void randomSampleSkip();
     
     int bufferSize;
     int sampleRate;
