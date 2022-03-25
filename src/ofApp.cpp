@@ -44,7 +44,7 @@ void ofApp::setup() {
     binFreq = sampleRate / fftSize;
     
     windowSize = fftSize;
-    hopSize = windowSize / 2;
+    hopSize = windowSize / 4;
     
     phaseVocoder.setup(fftSize, windowSize, hopSize);
 //    phaseVocoder.setCrossOverSample(pianoSamp);
@@ -563,7 +563,7 @@ void ofApp::cleanRecording() {
     
     // amount to shave off start/end
     int cleanFromStart = (float)sampleRate / 10.0;
-    int cleanFromEnd = (float)sampleRate / 10.0;
+    int cleanFromEnd = (float)sampleRate / 20.0;
    
     // get avg sample value
     float sum = 0;
