@@ -59,6 +59,7 @@ class ofApp : public ofBaseApp {
 //    vector<float> chroma;
 
     PhaseVocoder phaseVocoder;
+    float phaseVocoderVolume;
     
     int recordedSamplesSize;
     int recordedSamplesCount;

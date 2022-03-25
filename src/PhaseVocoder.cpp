@@ -171,9 +171,7 @@ void PhaseVocoder::processWindow() {
 //    int pitchCount = ofMap(glitchAmount, 0, 0.75, 1, 30);
     int pitchCount = ofMap(glitchAmount, 0.4, 1.0, 3, 20);
     bool shouldApplyWindow = (currMode == simplePitchShift && pitchShift != 1) || (currMode == multiPitchShift && pitchCount > 1);
-    
-    cout << "pitchShift: " << pitchShift << "; shouldApplyWindow: " << shouldApplyWindow << endl;
-    
+        
     // apply window function to signal
     if (shouldApplyWindow) {
         for (int i = 0; i < windowSize; i++) {

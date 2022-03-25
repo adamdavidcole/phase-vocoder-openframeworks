@@ -27,6 +27,8 @@ void ofApp::setup() {
     glitchIntensity = 0;
     glitchAmount = 0;
     feedbackAmount = 0;
+    phaseVocoderVolume = 1;
+    
     pianoSamp.load(ofToDataPath("piano-chrom.wav"));
 //    pianoSamp.load(ofToDataPath("test-sound.wav"));
 //    pianoSamp.load(ofToDataPath("test-sound.wav"));
@@ -144,21 +146,21 @@ void ofApp::update() {
     if (isRunningPhases()) {
         cout << "running phases ellapsed time: " << to_string(ellapsedTime)  << endl;
         if (ellapsedTime < 5) {
-            // normal repititon
+            // normal repititon: 5 seconds
             currState = AppState::RUNNING_PHASE_ONE;
         } else if (ellapsedTime < 15) {
-            // slow oscillating degradation
+            // slow oscillating degradation: 10 seconds
             currState = AppState::RUNNING_PHASE_TWO;
         } else if (ellapsedTime < 45) {
-            // rise to full glitchiness
+            // rise to full glitchiness: 30 seconds
             currState = AppState::RUNNING_PHASE_THREE;
-        } else if (ellapsedTime < 45) {
+        } else if (ellapsedTime < 50) {
+            // highest intensity glitching: 5 seconds
             currState = AppState::RUNNING_PHASE_FOUR;
-        } else if (ellapsedTime < 55) {
-            currState = AppState::RUNNING_PHASE_FIVE;
         } else if (ellapsedTime < 60) {
-            currState = AppState::RUNNING_PHASE_SIX;
-        } else {
+            // calm down: 10 seconds
+            currState = AppState::RUNNING_PHASE_FIVE;
+        }  else {
             // TODO: reset state
             currState = AppState::IDLE;
         }
@@ -195,7 +197,7 @@ void ofApp::update() {
             phaseVocoder.glitchAmount = glitchAmount;
             phaseVocoder.glitchIntensity = glitchIntensity;
             
-            float pitchShiftDegree = floor(ofMap(glitchAmount, 0, phaseTwoMaxDistortion, 0, 12));
+            float pitchShiftDegree = floor(ofMap(glitchAmount, 0, phaseTwoMaxDistortion*2, 0, 12));
             if (ofRandom(1.0) > 0.5) pitchShiftDegree*= -1;
             float pitchShfit = powf(2.0, (int)pitchShiftDegree / 12.0);
 
@@ -236,58 +238,59 @@ void ofApp::update() {
             }
         }
              break;
-//        case AppState::RUNNING_PHASE_FOUR:
-//        {
-//            float phaseFourStart = 30;
-//            float phaseFourDuration = 45;
-//            float phaseFourMinDistortion = 0.8;
-//            float phaseFourMaxDistortion = 1.0;
-//            float progress = ofMap(ellapsedTime, phaseFourStart, phaseFourStart + phaseFourDuration, 0, 1);
-//
+        case AppState::RUNNING_PHASE_FOUR:
+        {
+            float phaseFourStart = 45;
+            float phaseFourDuration = 50;
+            float phaseFourMinDistortion = 1.0;
+            float phaseFourMaxDistortion = 1.0;
+            float progress = ofMap(ellapsedTime, phaseFourStart, phaseFourStart + phaseFourDuration, 0, 1);
+
 //            float phase = ofMap(sin(ellapsedTime* 5.0 * progress), -1, 1, phaseFourMinDistortion, phaseFourMaxDistortion) * (progress + 0.25);
-////
-////            float phase = ofMap(sin(ellapsedTime*5), -1, 1, phaseFourMinDistortion, phaseFourMaxDistortion) * progress;
-////
-//            glitchAmount = phase;
-//            glitchIntensity = mapSquared(glitchAmount, phaseFourMinDistortion, phaseFourMaxDistortion, phaseFourMinDistortion, phaseFourMaxDistortion);
 //
-//            float randomVocoderMore = ofRandom(1.0);
-//            if (randomVocoderMore < 0.2) {
-//                float pitchShiftDegree = floor(ofMap(glitchAmount, phaseFourMinDistortion, phaseFourMaxDistortion, 3, 24));
-//                if (ofRandom(1.0) > 0.5) {pitchShiftDegree*= -1;}
-//                pitchShiftDegree = ofClamp(pitchShiftDegree, -6, 18);
-//                float pitchShfit = powf(2.0, (int)pitchShiftDegree / 12.0);
-//            } else if (randomVocoderMore < 0.6) {
-//                phaseVocoder.setMode(multiPitchShift);
-//            } else {
-//                phaseVocoder.setMode(delaySpectrum);
-//            }
+//            float phase = ofMap(sin(ellapsedTime*5), -1, 1, phaseFourMinDistortion, phaseFourMaxDistortion) * progress;
+//
+            glitchAmount = 1.0;
+            glitchIntensity = ofClamp(mapSquared(progress, 0, 0.75, 1, 2), 1, 2);
+            phaseVocoder.glitchAmount = glitchAmount;
+            phaseVocoder.glitchIntensity = glitchIntensity;
             
-//            float randomSampleSkipVal = ofRandom(1.0);
-//            if (randomSampleSkipVal < 0.02 + progress * 0.02) {
-//                randomSampleSkip();
-//            }
-//        }
-//             break;
-//        case AppState::RUNNING_PHASE_FIVE:
-//        {
-//            float phaseFiveStart = 45;
-//            float phaseFiveDuration = 55;
-//            float phaseFiveMinDistortion = 1.8;
-//            float phaseFiveMaxDistortion = 2.2;
-//
-//            float progress = ofMap(ellapsedTime - phaseFiveStart, 0, phaseFiveDuration, 0, 1);
-//
-//            float phase = ofMap(sin(ellapsedTime*10), -1, 1, phaseFiveMinDistortion, phaseFiveMaxDistortion) * progress;
-//
-//            glitchAmount = phase;
-//            glitchIntensity = mapSquared(glitchAmount, phaseFiveMinDistortion, phaseFiveMaxDistortion, phaseFiveMinDistortion, phaseFiveMaxDistortion);
-//        }
-//             break;
-        case AppState::RUNNING_PHASE_SIX:
-            glitchAmount = 0;
-            glitchIntensity = 0;
+
+            float randomVocoderMore = ofRandom(1.0);
+            if (randomVocoderMore < 0.2) {
+                float pitchShiftDegree = floor(ofMap(glitchAmount, phaseFourMinDistortion, phaseFourMaxDistortion, 3, 24));
+                if (ofRandom(1.0) > 0.5) {pitchShiftDegree*= -1;}
+                pitchShiftDegree = ofClamp(pitchShiftDegree, -6, 18);
+                float pitchShfit = powf(2.0, (int)pitchShiftDegree / 12.0);
+            } else if (randomVocoderMore < 0.6) {
+                phaseVocoder.setMode(multiPitchShift);
+            } else {
+                phaseVocoder.setMode(delaySpectrum);
+            }
+            
+            float randomSampleSkipVal = ofRandom(1.0);
+            if (randomSampleSkipVal < 0.03 + progress * 0.02) {
+                randomSampleSkip();
+            }
+        }
+             break;
+        case AppState::RUNNING_PHASE_FIVE:
+        {
+            float phaseFiveStart = 50;
+            float phaseFiveDuration = 10;
+            float progressToCalmGlitch = ofMap(ellapsedTime, phaseFiveStart, phaseFiveStart + phaseFiveDuration, 1, 0);
+            progressToCalmGlitch = ofClamp(progressToCalmGlitch, 0, 1);
+            cout << "phase 5 " << progressToCalmGlitch << endl;
+            glitchAmount = progressToCalmGlitch;
+            glitchIntensity = 2 * progressToCalmGlitch;
+            phaseVocoder.glitchAmount = glitchAmount;
+            phaseVocoder.glitchIntensity = glitchIntensity;
+            phaseVocoderVolume *= progressToCalmGlitch;
+            
+            phaseVocoder.setMode(simplePitchShift);
+        }
             break;
+  
     }
     
 //    uint64_t ellapsedTime = ofGetElapsedTimef();
@@ -448,7 +451,7 @@ void ofApp::audioOut(float* buffer, int bufferSize, int nChannels) {
 //        float sample = osc.sinewave(frequency);
         phaseVocoder.addSample(sample);
 
-        float currentSample = phaseVocoder.readSample();
+        float currentSample = phaseVocoder.readSample() * phaseVocoderVolume;
         
 //        dl.addSample(sample);
 //        currentSample = dl.getSample();
@@ -596,8 +599,7 @@ bool ofApp::isRunningPhases() {
            currState == AppState::RUNNING_PHASE_TWO ||
            currState == AppState::RUNNING_PHASE_THREE ||
            currState == AppState::RUNNING_PHASE_FOUR ||
-           currState == AppState::RUNNING_PHASE_FIVE ||
-           currState == AppState::RUNNING_PHASE_SIX;
+           currState == AppState::RUNNING_PHASE_FIVE;
 }
 
 void ofApp::randomSampleSkip() {
