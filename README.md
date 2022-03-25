@@ -11,6 +11,7 @@ This project was built using openFrameworks and consisted of three major stages/
   
 INSERT_FINAL_PROJECT_VIDEO
 
+
 ## Audio Signal Processing
 One goal of mine for this project was to gain a better understanding of what “audio programming” entailed. I understood the basics of how audio was represented in digital files, sample rates, frequencies, etc., but not about how to manipulate them further. I found a [series of tutorials](https://www.youtube.com/watch?v=_QX4ZdlsqSQ&list=PLNURizt7mHsJ9EasygZJl7M3e-kAOV9Pa) on YouTube specifically focused on audio programming in openFrameworks with exercises in building my own oscillators, envelopes, audio recorders — overall I left with a much better understanding of the audioIn/audioOut patterns and handling digital representations of sound files in general.
 
@@ -23,7 +24,7 @@ I was lucky to find a [detailed tutorial on YouTube by Bela Studios](https://www
 4. Getting the FFT representation of each audio block, modifying the audio signal in the frequency domain, and using phase unwrapping and the inverse FFT to return to the time domain
 5. Outputting the modified signal to the audioOut buffer
 
-<img width="1721" alt="Screen Shot 2022-03-25 at 1 36 21 AM" src="https://user-images.githubusercontent.com/5685294/160041400-8eb5a711-4f12-4e0d-b870-73834b614467.png">
+<img width="600" alt="Screen Shot 2022-03-25 at 1 36 21 AM" src="https://user-images.githubusercontent.com/5685294/160041400-8eb5a711-4f12-4e0d-b870-73834b614467.png">
 
 With this infrastructure, I was able to explore several phase vocoder operations such as:
 1. Voice robotization
@@ -35,7 +36,8 @@ Overall, this experience taught me a lot about audio signal processing. I feel p
 
 INSERT_PITCH_SHIFTING_EXAMPLE
 
-Video Signal Processing
+
+## Video Signal Processing
 I was using the phase vocoder to distort my voice input, and wanted to pair that with a distorted video input. I also wanted to gain more experience with GLSL, so I took some time to figure out how to set up a shader in openFrameworks including how to pass webcam data through as a texture.
 
 I was lucky to find several GLSL glitch shaders on github/shadertoy which gave me a good start of the aesthetic I was going for. However, I realized that what I really was interested in was some sort of datamoshing/pixel sorting algorithm. I wasn’t able to find any existing code for that, so I had to develop my own algorithm of sorts. I decided that to get the feeling of the screen “melting”, I’d benefit from some sort of feedback mechanism which entailed:
@@ -50,7 +52,8 @@ The result of this feedback loop was immediately exciting, creating trails as I 
 
 INSERT_VIDEO_FEEBACK_STILL_OR_VIDEO
 
-Bringing It All Together
+
+## Bringing It All Together
 This project began mostly as a technical exploration, but in the back of my mind I was thinking I’d need to come up with a creative way to bring it all together. I recognized that I could parameterize the degree of distortion in both the audio and video signal and had a theory that it could be interesting to see those distortions slowly escalate until the bits in the screen/speaker were “exploding”.
 
 It took quite a bit of fine tuning, and there were many times when the two didn’t quite add up. The experience made me think of the concept of audio-vision as described by Michael Chion and the delicate balance there is in matching audio with visuals. However, I could feel there were times when I achieved synchronicity and my goal was to have that be the case from beginning to end. 
