@@ -169,7 +169,7 @@ void PhaseVocoder::processWindow() {
     vector<float> outputWindow(windowSize);
     
 //    int pitchCount = ofMap(glitchAmount, 0, 0.75, 1, 30);
-    int pitchCount = ofMap(glitchAmount, 0, 0.75, 1, 30);
+    int pitchCount = ofMap(glitchAmount, 0.4, 1.0, 3, 20);
     bool shouldApplyWindow = (currMode == simplePitchShift && pitchShift != 1) || (currMode == multiPitchShift && pitchCount > 1);
     
     cout << "pitchShift: " << pitchShift << "; shouldApplyWindow: " << shouldApplyWindow << endl;
@@ -216,9 +216,9 @@ void PhaseVocoder::processWindow() {
         int pitchCountStart = 0;
         int pitchCountEnd = pitchCount;
         bool includeNegativePitches = false;
-        if (glitchAmount > 0.5) {
+        if (glitchAmount > 0.75 && ofRandom(1.5) < glitchAmount) {
             includeNegativePitches = true;
-            pitchCountStart = ofMap(glitchAmount, 0.5, 1, 3, -8);
+            pitchCountStart = ofMap(glitchAmount, 0.75, 1, 3, -8);
             pitchCountEnd = ofMap(glitchAmount, 0.5, 1, pitchCountStart + 1, 10);
         }
     

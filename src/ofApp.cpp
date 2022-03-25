@@ -144,10 +144,13 @@ void ofApp::update() {
     if (isRunningPhases()) {
         cout << "running phases ellapsed time: " << to_string(ellapsedTime)  << endl;
         if (ellapsedTime < 5) {
+            // normal repititon
             currState = AppState::RUNNING_PHASE_ONE;
         } else if (ellapsedTime < 15) {
+            // slow oscillating degradation
             currState = AppState::RUNNING_PHASE_TWO;
-        } else if (ellapsedTime < 30) {
+        } else if (ellapsedTime < 45) {
+            // rise to full glitchiness
             currState = AppState::RUNNING_PHASE_THREE;
         } else if (ellapsedTime < 45) {
             currState = AppState::RUNNING_PHASE_FOUR;
@@ -203,9 +206,9 @@ void ofApp::update() {
         case AppState::RUNNING_PHASE_THREE:
         {
             float phaseThreeStart = 15;
-            float phaseThreeDuration = 15;
+            float phaseThreeDuration = 30;
             float phaseThreeMinDistortion = 0.4;
-            float phaseThreeMaxDistortion = 0.8;
+            float phaseThreeMaxDistortion = 1.0;
             float progress = ofMap(ellapsedTime, phaseThreeStart, phaseThreeStart + phaseThreeDuration, 0, 1);
             
             float phase = ofMap(sin(ellapsedTime* 5.0 * progress), -1, 1, phaseThreeMinDistortion, phaseThreeMaxDistortion) * (progress + 0.25);
@@ -228,38 +231,42 @@ void ofApp::update() {
             }
             
             float randomSampleSkipVal = ofRandom(1.0);
-            if (randomSampleSkipVal < 0.02) {
+            if (randomSampleSkipVal < 0.03 * progress) {
                 randomSampleSkip();
             }
-           
-            
-//            phaseVocoder.setPitchShift(pitchShfit);
-            
-            
-            
-//
-//            float progress = ofMap(ellapsedTime - phaseThreeStart, 0, phaseThreeDuration, 0, 1);
-//
-//            float phase = ofMap(sin(ellapsedTime*2), -1, 1, phaseThreeMinDistortion, phaseThreeMaxDistortion) * progress;
-//
-//            glitchAmount = phase;
-//            glitchIntensity = mapSquared(glitchAmount, phaseThreeMinDistortion, phaseThreeMaxDistortion, phaseThreeMinDistortion, phaseThreeMaxDistortion);
         }
-//
              break;
 //        case AppState::RUNNING_PHASE_FOUR:
 //        {
 //            float phaseFourStart = 30;
 //            float phaseFourDuration = 45;
-//            float phaseFourMinDistortion = 0.75;
+//            float phaseFourMinDistortion = 0.8;
 //            float phaseFourMaxDistortion = 1.0;
+//            float progress = ofMap(ellapsedTime, phaseFourStart, phaseFourStart + phaseFourDuration, 0, 1);
 //
-//            float progress = ofMap(ellapsedTime - phaseFourStart, 0, phaseFourDuration, 0, 1);
-//
-//            float phase = ofMap(sin(ellapsedTime*5), -1, 1, phaseFourMinDistortion, phaseFourMaxDistortion) * progress;
-//
+//            float phase = ofMap(sin(ellapsedTime* 5.0 * progress), -1, 1, phaseFourMinDistortion, phaseFourMaxDistortion) * (progress + 0.25);
+////
+////            float phase = ofMap(sin(ellapsedTime*5), -1, 1, phaseFourMinDistortion, phaseFourMaxDistortion) * progress;
+////
 //            glitchAmount = phase;
 //            glitchIntensity = mapSquared(glitchAmount, phaseFourMinDistortion, phaseFourMaxDistortion, phaseFourMinDistortion, phaseFourMaxDistortion);
+//
+//            float randomVocoderMore = ofRandom(1.0);
+//            if (randomVocoderMore < 0.2) {
+//                float pitchShiftDegree = floor(ofMap(glitchAmount, phaseFourMinDistortion, phaseFourMaxDistortion, 3, 24));
+//                if (ofRandom(1.0) > 0.5) {pitchShiftDegree*= -1;}
+//                pitchShiftDegree = ofClamp(pitchShiftDegree, -6, 18);
+//                float pitchShfit = powf(2.0, (int)pitchShiftDegree / 12.0);
+//            } else if (randomVocoderMore < 0.6) {
+//                phaseVocoder.setMode(multiPitchShift);
+//            } else {
+//                phaseVocoder.setMode(delaySpectrum);
+//            }
+            
+//            float randomSampleSkipVal = ofRandom(1.0);
+//            if (randomSampleSkipVal < 0.02 + progress * 0.02) {
+//                randomSampleSkip();
+//            }
 //        }
 //             break;
 //        case AppState::RUNNING_PHASE_FIVE:
