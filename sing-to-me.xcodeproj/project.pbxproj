@@ -21,7 +21,6 @@
 		483908258D00B98B4BE69F07 /* ofxLabel.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78D67A00EB899FAC09430597 /* ofxLabel.cpp */; };
 		4ADB88E2FB52E76A471065DE /* ofxOscParameterSync.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0AED834CE4DEC5260AF302A2 /* ofxOscParameterSync.cpp */; };
 		510CAFE035E576A4E1502D52 /* UdpSocket.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E6DEF695B88BA5FAACEAA937 /* UdpSocket.cpp */; };
-		58622E65F3A549A33C9559AA /* smpPitchShift.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E74EC61A2C69EE8390B3BBBE /* smpPitchShift.cpp */; };
 		5864AD82E20F15536D054EA3 /* ofxOscMessage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = DF49D76C45D5DB505A234880 /* ofxOscMessage.cpp */; };
 		5C4A4AA5D4784DF23EA43038 /* maxiAtoms.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1EFA3ACBB8D16CC0DA1E79C6 /* maxiAtoms.cpp */; };
 		5CBB2AB3A60F65431D7B555D /* ofxButton.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C88333E71C9457E441C33474 /* ofxButton.cpp */; };
@@ -162,7 +161,6 @@
 		C70D8946940288799E82131E /* ofxSliderGroup.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ofxSliderGroup.h; path = ../../../addons/ofxGui/src/ofxSliderGroup.h; sourceTree = SOURCE_ROOT; };
 		C88333E71C9457E441C33474 /* ofxButton.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = ofxButton.cpp; path = ../../../addons/ofxGui/src/ofxButton.cpp; sourceTree = SOURCE_ROOT; };
 		CAB67BC7A1CC020FDAC5381B /* ofxEasyFft.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ofxEasyFft.h; path = ../../../addons/ofxFft/src/ofxEasyFft.h; sourceTree = SOURCE_ROOT; };
-		CD00567410D145DE2464DB2D /* smpPitchShift.hpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = smpPitchShift.hpp; path = src/smpPitchShift.hpp; sourceTree = SOURCE_ROOT; };
 		CE67198F2891A8FFEA3686E6 /* ofxFftBasic.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = ofxFftBasic.cpp; path = ../../../addons/ofxFft/src/ofxFftBasic.cpp; sourceTree = SOURCE_ROOT; };
 		CE695AF66B49048A2E3C2B6E /* ofxShader.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = ofxShader.cpp; path = ../../../addons/ofxShader/src/ofxShader.cpp; sourceTree = SOURCE_ROOT; };
 		D1C864AE2FE539BE7FD1F628 /* maxiMFCC.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = maxiMFCC.h; path = ../../../addons/ofxMaxim/libs/maxiMFCC.h; sourceTree = SOURCE_ROOT; };
@@ -357,7 +355,6 @@
 		E4B6FCAD0C3E899E008CF71C /* openFrameworks-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "openFrameworks-Info.plist"; sourceTree = "<group>"; };
 		E4EB6923138AFD0F00A09F29 /* Project.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Project.xcconfig; sourceTree = "<group>"; };
 		E6DEF695B88BA5FAACEAA937 /* UdpSocket.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = UdpSocket.cpp; path = ../../../addons/ofxOsc/libs/oscpack/src/ip/posix/UdpSocket.cpp; sourceTree = SOURCE_ROOT; };
-		E74EC61A2C69EE8390B3BBBE /* smpPitchShift.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = smpPitchShift.cpp; path = src/smpPitchShift.cpp; sourceTree = SOURCE_ROOT; };
 		ECF8674C7975F1063C5E30CA /* ofxGuiGroup.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = ofxGuiGroup.cpp; path = ../../../addons/ofxGui/src/ofxGuiGroup.cpp; sourceTree = SOURCE_ROOT; };
 		EFA729F2F65D97F65DB52E44 /* maxiFFT.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = maxiFFT.h; path = ../../../addons/ofxMaxim/libs/maxiFFT.h; sourceTree = SOURCE_ROOT; };
 		F3C78E7AB53E01022E9374A3 /* fft.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = fft.cpp; path = ../../../addons/ofxMaxim/libs/fft.cpp; sourceTree = SOURCE_ROOT; };
@@ -945,8 +942,6 @@
 				2C3FBE7430BA4A7A26B74C32 /* PhaseVocoder.cpp */,
 				B85868B427EBB4BA00657BF7 /* DelayLine.cpp */,
 				B85868B527EBB4BA00657BF7 /* DelayLine.hpp */,
-				CD00567410D145DE2464DB2D /* smpPitchShift.hpp */,
-				E74EC61A2C69EE8390B3BBBE /* smpPitchShift.cpp */,
 				2FAE4DE8E54EC744D3B03AB2 /* CircularBuffer.hpp */,
 				F580E5532E2717C964E2BBE5 /* CircularBuffer.cpp */,
 			);
@@ -1084,7 +1079,6 @@
 			files = (
 				E4B69E200A3A1BDC003C02F2 /* main.cpp in Sources */,
 				E4B69E210A3A1BDC003C02F2 /* ofApp.cpp in Sources */,
-				58622E65F3A549A33C9559AA /* smpPitchShift.cpp in Sources */,
 				D1E8ECF511E92F54ED44721C /* CircularBuffer.cpp in Sources */,
 				28A3E81BBF25A7F0C13E90D6 /* PhaseVocoder.cpp in Sources */,
 				0686C38EE993C67B96002FA1 /* kiss_fft.c in Sources */,

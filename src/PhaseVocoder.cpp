@@ -6,7 +6,6 @@
 //
 
 #include "PhaseVocoder.hpp"
-#include "smpPitchShift.hpp"
 
 void WindowProcessor::setup(PhaseVocoder* _phaseVocoder) {
     phaseVocoder = _phaseVocoder;
