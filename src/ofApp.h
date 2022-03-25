@@ -9,6 +9,9 @@
 #include "PhaseVocoder.hpp"
 #include "DelayLine.hpp"
 
+enum class AppState {
+    IDLE, RUNNING_PHASE_ONE, RUNNING_PHASE_TWO, RUNNING_PHASE_THREE, RUNNING_PHASE_FOUR, RUNNING_PHASE_FIVE, RUNNING_PHASE_SIX, RECORDING
+};
 
 class ofApp : public ofBaseApp {
    public:
@@ -31,6 +34,11 @@ class ofApp : public ofBaseApp {
     void windowResized(int w, int h);
     void dragEvent(ofDragInfo dragInfo);
     void gotMessage(ofMessage msg);
+    
+    AppState currState;
+    float phaseStartTime;
+    void beginRunningPhases();
+    bool isRunningPhases();
     
     int bufferSize;
     int sampleRate;

@@ -1,6 +1,7 @@
 #include "ofApp.h"
 
 #define DISABLE_AUDIO false
+#define DISABLE_VIDEO false
 
 float mtofArray[] = {0, 8.661957, 9.177024, 9.722718, 10.3, 10.913383, 11.562325, 12.25, 12.978271, 13.75, 14.567617, 15.433853, 16.351599, 17.323914, 18.354048, 19.445436, 20.601723, 21.826765, 23.124651, 24.5, 25.956543, 27.5, 29.135235, 30.867706, 32.703197, 34.647827, 36.708096, 38.890873, 41.203445, 43.65353, 46.249302, 49., 51.913086, 55., 58.27047, 61.735413, 65.406395, 69.295654, 73.416191, 77.781746, 82.406891, 87.30706, 92.498604, 97.998856, 103.826172, 110., 116.540939, 123.470825, 130.81279, 138.591309, 146.832382, 155.563492, 164.813782, 174.61412, 184.997208, 195.997711, 207.652344, 220., 233.081879, 246.94165, 261.62558, 277.182617,293.664764, 311.126984, 329.627563, 349.228241, 369.994415, 391.995422, 415.304688, 440., 466.163757, 493.883301, 523.25116, 554.365234, 587.329529, 622.253967, 659.255127, 698.456482, 739.988831, 783.990845, 830.609375, 880., 932.327515, 987.766602, 1046.502319, 1108.730469, 1174.659058, 1244.507935, 1318.510254, 1396.912964, 1479.977661, 1567.981689, 1661.21875, 1760., 1864.655029, 1975.533203, 2093.004639, 2217.460938, 2349.318115, 2489.015869, 2637.020508, 2793.825928, 2959.955322, 3135.963379, 3322.4375, 3520., 3729.31, 3951.066406, 4186.009277, 4434.921875, 4698.63623, 4978.031738, 5274.041016, 5587.651855, 5919.910645, 6271.926758, 6644.875, 7040., 7458.620117, 7902.132812, 8372.018555, 8869.84375, 9397.272461, 9956.063477, 10548.082031, 11175.303711, 11839.821289, 12543.853516, 13289.75};
 
@@ -12,7 +13,6 @@ void printFloatVector(vector<float> vec) {
     std::cout << "]" << endl;
 }
 
-
 float mapSquared(float value, float start1, float stop1, float start2, float stop2) {
   float inT = ofMap(value, start1, stop1, 0, 1);
   float outT = inT * inT;
@@ -21,6 +21,8 @@ float mapSquared(float value, float start1, float stop1, float start2, float sto
 
 //--------------------------------------------------------------
 void ofApp::setup() {
+    currState = AppState::IDLE;
+    phaseStartTime = -1;
     
     glitchIntensity = 0;
     glitchAmount = 0;
@@ -30,7 +32,6 @@ void ofApp::setup() {
 //    pianoSamp.load(ofToDataPath("test-sound.wav"));
 //    pianoSamp.load(ofToDataPath("whale-sound1.wav"));
 
-    
     bufferSize = 512;
     sampleRate = 44100;
     
@@ -69,76 +70,177 @@ void ofApp::setup() {
     camWidth = 1280;
     camHeight = 720;
     
-    webcam.setup(camWidth, camHeight);
-    pixelsToDraw.allocate(camWidth, camHeight, 3);
-    myTexture.allocate (camWidth, camHeight, GL_RGB);
+    if (!DISABLE_VIDEO) {
+        webcam.setup(camWidth, camHeight);
     
-    
-    
-    float planeScale = 1;
-    planeWidth = camWidth * planeScale;
-    planeHeight = camHeight * planeScale;
-    planeX = 0;
-    planeY = 0;
-    
-    int planeGridSize = 20;
-    int planeColumns = planeWidth / planeGridSize;
-    int planeRows = planeHeight / planeGridSize;
+        pixelsToDraw.allocate(camWidth, camHeight, 3);
+        myTexture.allocate (camWidth, camHeight, GL_RGB);
+        
+        float planeScale = 1;
+        planeWidth = camWidth * planeScale;
+        planeHeight = camHeight * planeScale;
+        planeX = 0;
+        planeY = 0;
+        
+        int planeGridSize = 20;
+        int planeColumns = planeWidth / planeGridSize;
+        int planeRows = planeHeight / planeGridSize;
 
-    plane.set(planeWidth,
-              planeHeight,
-              planeColumns,
-              planeRows,
-              OF_PRIMITIVE_TRIANGLES);
-    plane.mapTexCoordsFromTexture(myTexture);
-    
-    feedbackImg.allocate(planeWidth, planeHeight, OF_IMAGE_COLOR);
-    shouldClearFeedbackImg = false;
+        plane.set(planeWidth,
+                  planeHeight,
+                  planeColumns,
+                  planeRows,
+                  OF_PRIMITIVE_TRIANGLES);
+        plane.mapTexCoordsFromTexture(myTexture);
 
-    
-    shader.load("shader");
+        feedbackImg.allocate(planeWidth, planeHeight, OF_IMAGE_COLOR);
+        shouldClearFeedbackImg = false;
+
+        shader.load("shader");
+    }
 }
 
 //--------------------------------------------------------------
 void ofApp::update() {
-    webcam.update();
-    
-    // If the grabber indeed has fresh data,
-    if(webcam.isFrameNew()){
+    if (!DISABLE_VIDEO) {
+        webcam.update();
+        
+        // If the grabber indeed has fresh data,
+        if(webcam.isFrameNew()){
 
-        ofPixels image = webcam.getPixels();
-        
-        for (int y = 0; y < camHeight; y++) {
-            for (int x = 0; x < camWidth; x++) {
-                int shift = ofMap(mouseX, 0, ofGetWidth(), -200, 200);
-                ofColor currColor = image.getColor(x, y);
-                pixelsToDraw.setColor(x, y, currColor);
-            }
-        }
-        
-        if (shouldClearFeedbackImg) {
-            // hack for wierd inverse x position bug
-            for (int x = 0; x < feedbackImg.getWidth(); x++) {
-               for (int y = 0; y < feedbackImg.getHeight(); y++) {
-                   ofColor camColor = image.getColor(camWidth - x, y);
-                   feedbackImg.setColor(x, y, camColor);
-               }
-           }
+            ofPixels image = webcam.getPixels();
             
-            feedbackImg.update();
-        }
+            for (int y = 0; y < camHeight; y++) {
+                for (int x = 0; x < camWidth; x++) {
+                    int shift = ofMap(mouseX, 0, ofGetWidth(), -200, 200);
+                    ofColor currColor = image.getColor(x, y);
+                    pixelsToDraw.setColor(x, y, currColor);
+                }
+            }
+            
+            if (shouldClearFeedbackImg) {
+                // hack for wierd inverse x position bug
+                for (int x = 0; x < feedbackImg.getWidth(); x++) {
+                   for (int y = 0; y < feedbackImg.getHeight(); y++) {
+                       ofColor camColor = image.getColor(camWidth - x, y);
+                       feedbackImg.setColor(x, y, camColor);
+                   }
+               }
+                
+                feedbackImg.update();
+            }
 
-        myTexture.loadData(pixelsToDraw);
+            myTexture.loadData(pixelsToDraw);
+        }
+        
+        if (!shouldClearFeedbackImg) {
+            int x = planeX;
+            int y = planeY;
+            feedbackImg.grabScreen(x, y, planeWidth, planeHeight);
+        }
     }
     
-    if (!shouldClearFeedbackImg) {
-        int x = planeX;
-        int y = planeY;
-        feedbackImg.grabScreen(x, y, planeWidth, planeHeight);
+    float ellapsedTime = ofGetElapsedTimef() - phaseStartTime;
+    if (isRunningPhases()) {
+        cout << "running phases ellapsed time: " << to_string(ellapsedTime)  << endl;
+        if (ellapsedTime < 5) {
+            currState = AppState::RUNNING_PHASE_ONE;
+        } else if (ellapsedTime < 15) {
+            currState = AppState::RUNNING_PHASE_TWO;
+        } else if (ellapsedTime < 30) {
+            currState = AppState::RUNNING_PHASE_THREE;
+        } else if (ellapsedTime < 45) {
+            currState = AppState::RUNNING_PHASE_FOUR;
+        } else if (ellapsedTime < 55) {
+            currState = AppState::RUNNING_PHASE_FIVE;
+        } else if (ellapsedTime < 60) {
+            currState = AppState::RUNNING_PHASE_SIX;
+        } else {
+            // TODO: reset state
+            currState = AppState::IDLE;
+        }
     }
+    
+    switch (currState) {
+        case AppState::IDLE:
+            break;
+        case AppState::RECORDING:
+            break;
+        case AppState::RUNNING_PHASE_ONE:
+            glitchAmount = 0;
+            glitchIntensity = 0;
+            break;
+        case AppState::RUNNING_PHASE_TWO:
+        {
+            float phaseTwoStart = 5;
+            float phaseTwoDuration = 10;
+            float phaseTwoMaxDistortion = 0.5;
+            float progress = ofMap(ellapsedTime - phaseTwoStart, 0, phaseTwoDuration, 0, 1);
 
-    phaseVocoder.glitchAmount = glitchAmount;
-    phaseVocoder.glitchIntensity = glitchIntensity;
+            float phase = ofMap(sin(ellapsedTime*2), -1, 1, 0, phaseTwoMaxDistortion) * progress;
+
+            glitchAmount = phase;
+            glitchIntensity = mapSquared(glitchAmount, 0, phaseTwoMaxDistortion, 0, phaseTwoMaxDistortion);
+        }
+            break;
+        case AppState::RUNNING_PHASE_THREE:
+        {
+            float phaseThreeStart = 15;
+            float phaseThreeDuration = 15;
+            float phaseThreeMinDistortion = 0.35;
+            float phaseThreeMaxDistortion = 0.75;
+            
+            float progress = ofMap(ellapsedTime - phaseThreeStart, 0, phaseThreeDuration, 0, 1);
+
+            float phase = ofMap(sin(ellapsedTime*2), -1, 1, phaseThreeMinDistortion, phaseThreeMaxDistortion) * progress;
+
+            glitchAmount = phase;
+            glitchIntensity = mapSquared(glitchAmount, phaseThreeMinDistortion, phaseThreeMaxDistortion, phaseThreeMinDistortion, phaseThreeMaxDistortion);
+        }
+
+             break;
+        case AppState::RUNNING_PHASE_FOUR:
+        {
+            float phaseFourStart = 30;
+            float phaseFourDuration = 45;
+            float phaseFourMinDistortion = 0.75;
+            float phaseFourMaxDistortion = 1.0;
+            
+            float progress = ofMap(ellapsedTime - phaseFourStart, 0, phaseFourDuration, 0, 1);
+
+            float phase = ofMap(sin(ellapsedTime*5), -1, 1, phaseFourMinDistortion, phaseFourMaxDistortion) * progress;
+
+            glitchAmount = phase;
+            glitchIntensity = mapSquared(glitchAmount, phaseFourMinDistortion, phaseFourMaxDistortion, phaseFourMinDistortion, phaseFourMaxDistortion);
+        }
+             break;
+        case AppState::RUNNING_PHASE_FIVE:
+        {
+            float phaseFiveStart = 45;
+            float phaseFiveDuration = 55;
+            float phaseFiveMinDistortion = 1.8;
+            float phaseFiveMaxDistortion = 2.2;
+            
+            float progress = ofMap(ellapsedTime - phaseFiveStart, 0, phaseFiveDuration, 0, 1);
+
+            float phase = ofMap(sin(ellapsedTime*10), -1, 1, phaseFiveMinDistortion, phaseFiveMaxDistortion) * progress;
+
+            glitchAmount = phase;
+            glitchIntensity = mapSquared(glitchAmount, phaseFiveMinDistortion, phaseFiveMaxDistortion, phaseFiveMinDistortion, phaseFiveMaxDistortion);
+        }
+             break;
+        case AppState::RUNNING_PHASE_SIX:
+            glitchAmount = 0;
+            glitchIntensity = 0;
+            break;
+    }
+    
+//    uint64_t ellapsedTime = ofGetElapsedTimef();
+//    float phase = sin(ellapsedTime) * ofMap(ellapsedTime, 0, 60, 0, 1);
+//    glitchAmount = ofMap(phase, -1, 1, 0, 2);
+//    glitchIntensity = mapSquared(glitchAmount, 0, 2, 0, 2);
+//    phaseVocoder.glitchAmount = glitchAmount;
+//    phaseVocoder.glitchIntensity = glitchIntensity;
 
     
     // CHROMAGRAM!
@@ -180,37 +282,39 @@ void ofApp::update() {
 }
 
 //--------------------------------------------------------------
-void ofApp::draw() {    
-    shader.begin();
-    shader.setUniform2f("u_res", plane.getWidth(), plane.getHeight());
-    shader.setUniformTexture("inputTexture", myTexture, 1);
-    shader.setUniformTexture("feedbackTexture", feedbackImg, 2);
-    shader.setUniform1f("glitchIntensity", glitchIntensity);
-    shader.setUniform1f("glitchAmount", glitchAmount);
-    shader.setUniform1f("feedbackAmount", feedbackAmount);
-    
-    ofPushMatrix();
-    ofTranslate(planeWidth/2, planeHeight/2);
-    ofRotateDeg(180);
-    
-    plane.draw();
-    
-    ofPopMatrix();
+void ofApp::draw() {
+    if (!DISABLE_VIDEO) {
+        shader.begin();
+        shader.setUniform2f("u_res", plane.getWidth(), plane.getHeight());
+        shader.setUniformTexture("inputTexture", myTexture, 1);
+        shader.setUniformTexture("feedbackTexture", feedbackImg, 2);
+        shader.setUniform1f("glitchIntensity", glitchIntensity);
+        shader.setUniform1f("glitchAmount", glitchAmount);
+        shader.setUniform1f("feedbackAmount", feedbackAmount);
+        
+        ofPushMatrix();
+        ofTranslate(planeWidth/2, planeHeight/2);
+        ofRotateDeg(180);
+        
+        plane.draw();
+        
+        ofPopMatrix();
 
-    shader.end();
-    
-    int margin = 20;
-    feedbackImg.draw(0, planeHeight + margin);
-    
+        shader.end();
+        
+        int margin = 20;
+        feedbackImg.draw(0, planeHeight + margin);
+    }
     
     string gfactorString = "Glitch amount: " + to_string(glitchAmount);
     string gfactorString2 = "Glitch intensity: " + to_string(glitchIntensity);
     string gfactorString3 = "Feedback amount: " + to_string(feedbackAmount);
+    int currStateInt = (int)currState;
+    string currstateString = "CurrState: " + to_string(currStateInt);
+
     ofDrawBitmapString(gfactorString, 50, 50);
     ofDrawBitmapString(gfactorString2, 50, 65);
-    ofDrawBitmapString(gfactorString3, 50, 75);
-
-  
+    ofDrawBitmapString(currstateString, 50, 95);
 
 //    int fft2Bins = phaseVocoder.fft->getBinSize();
 //    float bandWidth = ofGetWidth()/ (float)fft2Bins;
@@ -307,6 +411,7 @@ void ofApp::audioOut(float* buffer, int bufferSize, int nChannels) {
 void ofApp::keyPressed(int key) {
     if (key == ' ' && !isRecording) {
         cout << "Begin recording" << endl;
+        currState = AppState::RECORDING;
         recordedSamplesCount = 0;
         recordedSamplesReadPoint = 0;
         recordedSamples.clear();
@@ -362,6 +467,7 @@ void ofApp::keyReleased(int key) {
         cout << "End recording" << endl;
         isRecording = false;
         cleanRecording();
+        beginRunningPhases();
     }
     
     
@@ -384,6 +490,8 @@ void ofApp::mouseMoved(int x, int y) {
     
     glitchAmount = ofMap(x, 0, ofGetWidth(), 0, 1);
     glitchIntensity = mapSquared(y, 0, ofGetHeight(), 0, 1);
+    phaseVocoder.glitchAmount = glitchAmount;
+    phaseVocoder.glitchIntensity = glitchIntensity;
     
 //    channelMix = ofMap(y, 0, ofGetHeight(), 1, 0);
     
@@ -392,6 +500,20 @@ void ofApp::mouseMoved(int x, int y) {
 //    ofSetColor(r, abs(r - b), b);
 }
 
+
+void ofApp::beginRunningPhases() {
+    currState = AppState::RUNNING_PHASE_ONE;
+    phaseStartTime = ofGetElapsedTimef();
+}
+
+bool ofApp::isRunningPhases() {
+    return currState == AppState::RUNNING_PHASE_ONE ||
+           currState == AppState::RUNNING_PHASE_TWO ||
+           currState == AppState::RUNNING_PHASE_THREE ||
+           currState == AppState::RUNNING_PHASE_FOUR ||
+           currState == AppState::RUNNING_PHASE_FIVE ||
+           currState == AppState::RUNNING_PHASE_SIX;
+}
 
 // clean white space at beginning end of sample buffer
 void ofApp::cleanRecording() {
