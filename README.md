@@ -5,9 +5,9 @@ This project is an experiment in audio and video signal processing.
 The result is an interactive installation meant to be projected on a large surface. The participant is asked to input some audio data after which begins a digital crescendo using the user’s video and audio input, resulting in a bit climax.
 
 This project was built using openFrameworks and consisted of three major stages/workstreams:
-	1. Audio signal processing using a phase vocoder
-	2. Video signal processing using GLSL and video feedback
-	3. Bringing those two technical explorations together in a unified aesthetic whole
+1. Audio signal processing using a phase vocoder
+2. Video signal processing using GLSL and video feedback
+3. Bringing those two technical explorations together in a unified aesthetic whole
   
 INSERT_FINAL_PROJECT_VIDEO
 
