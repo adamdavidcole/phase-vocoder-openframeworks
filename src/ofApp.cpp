@@ -251,7 +251,7 @@ void ofApp::update() {
 //            float phase = ofMap(sin(ellapsedTime*5), -1, 1, phaseFourMinDistortion, phaseFourMaxDistortion) * progress;
 //
             glitchAmount = 1.0;
-            glitchIntensity = ofClamp(mapSquared(progress, 0, 0.75, 1, 2), 1, 2);
+            glitchIntensity = ofClamp(mapSquared(progress, 0, 1.0, 1, 1.5), 1, 1.5);
             phaseVocoder.glitchAmount = glitchAmount;
             phaseVocoder.glitchIntensity = glitchIntensity;
             
@@ -278,14 +278,14 @@ void ofApp::update() {
         {
             float phaseFiveStart = 50;
             float phaseFiveDuration = 10;
-            float progressToCalmGlitch = ofMap(ellapsedTime, phaseFiveStart, phaseFiveStart + phaseFiveDuration, 1, 0);
+            float progressToCalmGlitch = mapSquared(ellapsedTime, phaseFiveStart, phaseFiveStart + phaseFiveDuration, 1, 0);
             progressToCalmGlitch = ofClamp(progressToCalmGlitch, 0, 1);
             cout << "phase 5 " << progressToCalmGlitch << endl;
             glitchAmount = progressToCalmGlitch;
-            glitchIntensity = 2 * progressToCalmGlitch;
+            glitchIntensity = sqrt(progressToCalmGlitch);
             phaseVocoder.glitchAmount = glitchAmount;
             phaseVocoder.glitchIntensity = glitchIntensity;
-            phaseVocoderVolume *= progressToCalmGlitch;
+            phaseVocoderVolume = progressToCalmGlitch;
             
             phaseVocoder.setMode(simplePitchShift);
         }
