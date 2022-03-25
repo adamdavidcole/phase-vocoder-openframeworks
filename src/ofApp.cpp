@@ -193,6 +193,7 @@ void ofApp::update() {
 
             glitchAmount = phase;
             glitchIntensity = phase;
+//            feedbackAmount = phase/10.0;
             
             phaseVocoder.glitchAmount = glitchAmount;
             phaseVocoder.glitchIntensity = glitchIntensity;
@@ -221,6 +222,13 @@ void ofApp::update() {
             phaseVocoder.glitchAmount = glitchAmount;
             phaseVocoder.glitchIntensity = glitchIntensity;
             
+            if (ofRandom(1.0) > 0.75) {
+                feedbackAmount = progress * 5.0;
+            }
+            
+            if (ofRandom(1.0) < 0.5) {
+                feedbackAmount = 0;
+            }
 
             float randomVocoderMore = ofRandom(1.0);
             if (randomVocoderMore < 0.2) {
@@ -255,6 +263,13 @@ void ofApp::update() {
             phaseVocoder.glitchAmount = glitchAmount;
             phaseVocoder.glitchIntensity = glitchIntensity;
             
+            if (ofRandom(1.0) > 0.75) {
+                feedbackAmount = 1.0;
+            }
+            
+            if (ofRandom(1.0) < 0.1) {
+                feedbackAmount = 0;
+            }
 
             float randomVocoderMore = ofRandom(1.0);
             if (randomVocoderMore < 0.2) {
@@ -276,18 +291,30 @@ void ofApp::update() {
              break;
         case AppState::RUNNING_PHASE_FIVE:
         {
+            if (!hasMaxedFeedbackBeforeCalmDown) {
+                feedbackAmount = 1;
+                hasMaxedFeedbackBeforeCalmDown = true;
+            }
+            
             float phaseFiveStart = 50;
             float phaseFiveDuration = 10;
             float progressToCalmGlitch = mapSquared(ellapsedTime, phaseFiveStart, phaseFiveStart + phaseFiveDuration, 1, 0);
             progressToCalmGlitch = ofClamp(progressToCalmGlitch, 0, 1);
-            cout << "phase 5 " << progressToCalmGlitch << endl;
-            glitchAmount = progressToCalmGlitch;
-            glitchIntensity = sqrt(progressToCalmGlitch);
+            
+            glitchAmount = progressToCalmGlitch / 2.0;
+            glitchIntensity = sqrt(progressToCalmGlitch) / 2.0;
+            
             phaseVocoder.glitchAmount = glitchAmount;
             phaseVocoder.glitchIntensity = glitchIntensity;
             phaseVocoderVolume = progressToCalmGlitch;
             
             phaseVocoder.setMode(simplePitchShift);
+            float pitchShiftDegree = floor(ofMap(progressToCalmGlitch, 1, 0.2, 6, 0));
+            pitchShiftDegree = ofClamp(pitchShiftDegree, 0, 1);
+            float pitchShfit = powf(2.0, pitchShiftDegree / 12.0);
+            phaseVocoder.setPitchShift(pitchShfit);
+            
+            feedbackAmount = progressToCalmGlitch;
         }
             break;
   
@@ -529,6 +556,7 @@ void ofApp::keyReleased(int key) {
         cout << "End recording" << endl;
         isRecording = false;
         cleanRecording();
+        phaseVocoderVolume = 1.0;
         beginRunningPhases();
     }
     

@@ -93,6 +93,7 @@ class ofApp : public ofBaseApp {
     float feedbackAmount;
     void setGlitchAmount(float _glitchAmount);
     void setPhaseVocoderMode();
+    bool hasMaxedFeedbackBeforeCalmDown = false;
     
     void cleanRecording();
     bool hasCleanedRecording;
