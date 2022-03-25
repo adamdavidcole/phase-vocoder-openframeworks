@@ -44,8 +44,8 @@ I was lucky to find several GLSL glitch shaders on github/shadertoy which gave m
 1. Displaying the webcam data on the screen
 2. Grabbing the pixels from the screen into an image buffer
 3. Passing two textures into the shader:
-	a. The clean webcam texture from step 1
-	b. The feedback screen texture from step 2
+    1. The clean webcam texture from step 1
+    2. The feedback screen texture from step 2
 4. Mixing these two textures to interesting results in the shader code
 
 The result of this feedback loop was immediately exciting, creating trails as I moved around. It became even cooler when I started adding distortion and blending the results with the glitch code. I feel like I only breached the surface of what can be accomplished with a signal feedback model.
