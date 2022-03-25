@@ -54,7 +54,7 @@ INSERT_VIDEO_FEEBACK_STILL_OR_VIDEO
 
 
 ## Bringing It All Together
-This project began mostly as a technical exploration, but in the back of my mind I was thinking I’d need to come up with a creative way to bring it all together. I recognized that I could parameterize the degree of distortion in both the audio and video signal and had a theory that it could be interesting to see those distortions slowly escalate until the bits in the screen/speaker were “exploding”.
+This project began mostly as a technical exploration, but in the back of my mind I was thinking I’d need to come up with a creative way to bring it all together. I recognized that I could parameterize the degree of distortion in both the audio and video signal and had a theory that it could be interesting to see those distortions slowly escalate until it felt like the bits in the screen/speaker were _exploding_.
 
 It took quite a bit of fine tuning, and there were many times when the two didn’t quite add up. The experience made me think of the concept of audio-vision as described by Michael Chion and the delicate balance there is in matching audio with visuals. However, I could feel there were times when I achieved synchronicity and my goal was to have that be the case from beginning to end. 
 
