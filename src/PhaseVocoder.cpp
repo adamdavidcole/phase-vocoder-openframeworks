@@ -39,8 +39,10 @@ void PhaseVocoder::setup(int _fftSize, int _windowSize, int _hopSize) {
     fftSize = _fftSize;
     windowSize = _windowSize;
     hopSize = _hopSize;
-    currMode = delaySpectrum;
+    currMode = simplePitchShift;
     
+    pitchShift = 1;
+    pitchCount = 1;
     
 
     int bufferSize = 2 * windowSize;
@@ -79,10 +81,10 @@ void PhaseVocoder::setup(int _fftSize, int _windowSize, int _hopSize) {
     windowProcessor.setup(this);
 
     fft = ofxFft::create(windowSize, OF_FFT_WINDOW_HAMMING);
+    ifft = ofxFft::create(windowSize, OF_FFT_WINDOW_HAMMING);
     crossOverSampleFft = ofxFft::create(windowSize, OF_FFT_WINDOW_HAMMING);
     
-    pitchShift = powf(2.0, 12.0 / 12.0);
-    pitchCount = 3;
+   
     
     signalFftAmplitudes = new float[windowSize];
     processedFftAmplitudes = new float[windowSize];
@@ -168,7 +170,9 @@ void PhaseVocoder::processWindow() {
     
 //    int pitchCount = ofMap(glitchAmount, 0, 0.75, 1, 30);
     int pitchCount = ofMap(glitchAmount, 0, 0.75, 1, 30);
-    bool shouldApplyWindow = currMode == simplePitchShift || (currMode == multiPitchShift && pitchCount > 1);
+    bool shouldApplyWindow = (currMode == simplePitchShift && pitchShift != 1) || (currMode == multiPitchShift && pitchCount > 1);
+    
+    cout << "pitchShift: " << pitchShift << "; shouldApplyWindow: " << shouldApplyWindow << endl;
     
     // apply window function to signal
     if (shouldApplyWindow) {
@@ -182,16 +186,30 @@ void PhaseVocoder::processWindow() {
     float* amplitudes = fft->getAmplitude();
     float* phases = fft->getPhase();
     
+//    // for visualization
+//    for (int i = 0; i < fftSize / 2; i++) {
+//        signalFftAmplitudes[i] = amplitudes[i];
+//    }
+    
     
     // DO BLOCK PROCESSING
     if (currMode == simplePitchShift) {
-        processBlockWithPitchShift(amplitudes, phases, amplitudesOut, phasesOut);
+        if (pitchShift == 1) {
+            for (int n = 0; n < fftSize / 2 + 1; n++) {
+                amplitudesOut[n] = amplitudes[n];
+                phasesOut[n] = phases[n];
+            }
+        } else {
+            processBlockWithPitchShift(amplitudes, phases, amplitudesOut, phasesOut);
+        }
+//        processBlockWithPitchShift(amplitudes, phases, amplitudesOut, phasesOut);
+
         
         // Reverse FFT, set to output window
-        fft->setPolar(amplitudesOut, phasesOut);
-        float* ifftSignal = fft->getSignal();
+        ifft->setPolar(amplitudesOut, phasesOut);
+        float* ifftSignal = ifft->getSignal();
         for (int i = 0; i < windowSize / 2; i++) {
-            outputWindow[i] += ifftSignal[i] * 10.0;
+            outputWindow[i] += ifftSignal[i] * 2.0;
         }
     } else if (currMode == multiPitchShift) {
         // BEDIN MULTI-pitch shifting
@@ -210,7 +228,7 @@ void PhaseVocoder::processWindow() {
                 int pitchShiftFactor = k * pitchShiftDistance;
                 pitchShift = powf(2.0, k / 12.0);
     
-                processBlock(amplitudes, phases, amplitudesOut, phasesOut);
+                processBlockWithPitchShift(amplitudes, phases, amplitudesOut, phasesOut);
     
                 // execute the reverse FFT
                 fft->setPolar(amplitudesOut, phasesOut);
@@ -249,6 +267,12 @@ void PhaseVocoder::processWindow() {
         //        crossOverSamplePhases = crossOverSampleFft->getPhase();
         //    }
     }
+    
+    // for visualization
+//    for (int i = 0; i < fftSize / 2; i++) {
+//        processedFftAmplitudes[i] = amplitudesOut[i];
+//    }
+//    
    
 
    // write to output buffer
@@ -370,7 +394,7 @@ void PhaseVocoder::processBlock(float *amplitudes, float *phases, float* amplitu
 // the following code/alogorithm from BelaPlatform:
 // https://github.com/BelaPlatform/bela-online-course/tree/master/lectures/lecture-20
 void PhaseVocoder::processBlockWithPitchShift(float *amplitudes, float *phases, float* amplitudesOut, float* phasesOut) {
-    for(int n = 0; n <= fftSize/2; n++) {
+    for(int n = 0; n <= fftSize/2 + 1; n++) {
         // Turn real and imaginary components into amplitude and phase
         float amplitude = amplitudes[n];
         float phase = phases[n];
@@ -382,7 +406,7 @@ void PhaseVocoder::processBlockWithPitchShift(float *amplitudes, float *phases, 
         // Subtract the amount of phase increment we'd expect to see based
         // on the centre frequency of this bin (2*pi*n/gFftSize) for this
         // hop size, then wrap to the range -pi to pi
-        phaseDiff = wrapPhase(phaseDiff - binFrequencies[n] * hopSize);
+        phaseDiff = wrapPhase(phaseDiff - binFrequencies[n] * (float)hopSize);
         
         // Find deviation from the centre frequency
         float frequencyDeviation = phaseDiff / (float)hopSize;
@@ -398,14 +422,16 @@ void PhaseVocoder::processBlockWithPitchShift(float *amplitudes, float *phases, 
     }
     
     // Zero out the synthesis bins, ready for new data
-    for(int n = 0; n <= fftSize / 2; n++) {
-        synthesisMagnitudes[n] = synthesisFrequencies[n] = 0;
+    for(int n = 0; n <= fftSize / 2 + 1; n++) {
+        synthesisMagnitudes[n] = synthesisFrequencies[n] = 0.0;
+        amplitudesOut[n] = phasesOut[n] = 0.0;
     }
     
     
     // Handle the pitch shift, storing frequencies into new bins
-    for(int n = 0; n <= fftSize / 2; n++) {
-        int newBin = floorf(n * pitchShift + 0.5);
+    for(int n = 0; n <= fftSize / 2 + 1; n++) {
+        int newBin = floorf((float)n * pitchShift + 0.5);
+        
         
         // Ignore any bins that have shifted above Nyquist
         if (newBin <= fftSize / 2) {
@@ -414,7 +440,7 @@ void PhaseVocoder::processBlockWithPitchShift(float *amplitudes, float *phases, 
         }
     }
     
-    for(int n = 0; n <= fftSize / 2; n++) {
+    for(int n = 0; n <= fftSize / 2 + 1; n++) {
         // Get the fractional offset from the bin centre frequency
         float frequencyDeviation = synthesisFrequencies[n] - ((float)n * 2.0 * M_PI / (float)fftSize);
         
@@ -422,7 +448,7 @@ void PhaseVocoder::processBlockWithPitchShift(float *amplitudes, float *phases, 
         float phaseDiff = frequencyDeviation * (float)hopSize;
         
         // Add the expected phase increment based on the bin centre frequency
-        phaseDiff +=  binFrequencies[n] * hopSize;
+        phaseDiff +=  binFrequencies[n] * (float)hopSize;
         
         // Advance the phase from the previous hop
         float outPhase = wrapPhase(lastOutputPhases[n] + phaseDiff);
@@ -603,7 +629,12 @@ void PhaseVocoder::processBlockWithCrossover(float* amplitudes, float* phases, f
 }
 
 void PhaseVocoder::setPitchShift(float _pitchShift) {
+    if (pitchShift == _pitchShift) return;
+    
     pitchShift = _pitchShift;
+//    for (int n = 0; n < fftSize/2 + 1; n++) {
+//        lastOutputPhases[n] = 0;
+//    }
 }
 
 void PhaseVocoder::setRandomPitchShift() {

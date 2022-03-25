@@ -247,7 +247,8 @@ vec4 small_blocks()
 
     if (uv.x < x_sup && uv.x > x_inf && uv.y < y_sup && uv.y > y_inf && r < 20)
     {
-        vec4 new_texture = texture(inputTexture, (varyingtexcoord + vec2(random(vec2(floor(varyingtexcoord.y) * 0.01)), random(vec2(fract(2 * varyingtexcoord.y))))) + vec2(100)*glitchIntensity);
+        float dir = rand() > 0.5 ? 1 : -1;
+        vec4 new_texture = texture(inputTexture, (varyingtexcoord + vec2(random(vec2(floor(varyingtexcoord.y) * 0.01)), random(vec2(fract(2 * varyingtexcoord.y))))) + vec2(100)*glitchIntensity*dir);
         return vec4(new_texture);
     }
     

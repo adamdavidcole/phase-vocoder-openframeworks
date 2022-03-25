@@ -48,13 +48,14 @@ public:
     void setPitchShift(float pitchShift);
 
     float pitchShift;
+    int pitchCount;
     
     ofxFft* fft;
+    ofxFft* ifft;
     ofxFft* crossOverSampleFft;
     float* signalFftAmplitudes;
     float* processedFftAmplitudes;
     
-    int pitchCount;
     
     void setCrossOverSample(maxiSample sample);
     

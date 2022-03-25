@@ -89,6 +89,8 @@ class ofApp : public ofBaseApp {
     float glitchIntensity;
     float glitchAmount;
     float feedbackAmount;
+    void setGlitchAmount(float _glitchAmount);
+    void setPhaseVocoderMode();
     
     void cleanRecording();
     bool hasCleanedRecording;
