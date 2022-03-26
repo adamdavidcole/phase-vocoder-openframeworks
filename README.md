@@ -1,5 +1,8 @@
 # Bit Climax 
 
+(**Photosensitivity Warning**
+*The videos linked here and created by this app contain intense flashing lights/colors*)
+
 This project is an experiment in audio and video signal processing.
 
 The result is an interactive installation meant to be projected on a large surface. The participant is asked to say the time after which begins a digital crescendo using the user’s video and audio input, resulting in a _bit climax_.
@@ -50,8 +53,7 @@ I was lucky to find several GLSL glitch shaders on github/shadertoy which gave m
 
 The result of this feedback loop was immediately exciting, creating trails as I moved around. It became even cooler when I started adding distortion and blending the results with the glitch code. I feel like I only breached the surface of what can be accomplished with a signal feedback model.
 
-INSERT_VIDEO_FEEBACK_STILL_OR_VIDEO
-
+<video width="600" src="https://user-images.githubusercontent.com/5685294/160222757-cf9c3ffd-9c0f-4c95-accd-bd7b153ce192.mp4">
 
 ## Bringing It All Together
 This project began mostly as a technical exploration, but in the back of my mind I was thinking I’d need to come up with a creative way to bring it all together. I recognized that I could parameterize the degree of distortion in both the audio and video signal and had a theory that it could be interesting to see those distortions slowly escalate until it felt like the bits in the screen/speaker were _exploding_.
