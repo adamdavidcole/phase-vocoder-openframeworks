@@ -147,7 +147,6 @@ void ofApp::update() {
     
     float ellapsedTime = ofGetElapsedTimef() - phaseStartTime;
     if (isRunningPhases()) {
-        cout << "running phases ellapsed time: " << to_string(ellapsedTime)  << endl;
         if (ellapsedTime < 5) {
             // normal repititon: 5 seconds
             currState = AppState::RUNNING_PHASE_ONE;
@@ -192,7 +191,7 @@ void ofApp::update() {
             float phaseTwoMaxDistortion = 0.4;
             float progress = ofMap(ellapsedTime, phaseTwoStart, phaseTwoStart + phaseTwoDuration, 0, 1);
 
-            float phase = ofMap(sin(ellapsedTime* 5.0 * progress), -1, 1, 0, phaseTwoMaxDistortion) * (progress + 0.25);
+            float phase = ofMap(sin(ellapsedTime* 3.0 * progress), -1, 1, 0, phaseTwoMaxDistortion) * (progress + 0.25);
 
             glitchAmount = phase;
             glitchIntensity = phase;
@@ -201,7 +200,7 @@ void ofApp::update() {
             phaseVocoder.glitchAmount = glitchAmount;
             phaseVocoder.glitchIntensity = glitchIntensity;
             
-            float pitchShiftDegree = floor(ofMap(glitchAmount, 0, phaseTwoMaxDistortion*2, 0, 12));
+            float pitchShiftDegree = floor(ofMap(glitchAmount, 0, phaseTwoMaxDistortion, 0, 12));
             if (ofRandom(1.0) > 0.5) pitchShiftDegree*= -1;
             float pitchShfit = powf(2.0, (int)pitchShiftDegree / 12.0);
 
@@ -225,20 +224,22 @@ void ofApp::update() {
             phaseVocoder.glitchAmount = glitchAmount;
             phaseVocoder.glitchIntensity = glitchIntensity;
             
-            if (ofRandom(1.0) > 0.75) {
-                feedbackAmount = progress;
+            if (ofRandom(1.0) > 0.65) {
+                feedbackAmount = progress;// + mapSquared(progress, 0, 1, 0, 1);
             }
             
-            if (ofRandom(1.0) < 0.5) {
+            if (ofRandom(1.0) < 0.2) {
                 feedbackAmount = 0;
             }
 
             float randomVocoderMore = ofRandom(1.0);
-            if (randomVocoderMore < 0.2) {
+            if (randomVocoderMore < 0.5 * (1-progress)) {
                 float pitchShiftDegree = floor(ofMap(glitchAmount, phaseThreeMinDistortion, phaseThreeMaxDistortion, 6, 18));
                 if (ofRandom(1.0) > 0.5) {pitchShiftDegree*= -1;}
                 pitchShiftDegree = ofClamp(pitchShiftDegree, -6, 18);
                 float pitchShfit = powf(2.0, (int)pitchShiftDegree / 12.0);
+                phaseVocoder.setMode(simplePitchShift);
+                phaseVocoder.setPitchShift(pitchShfit);
             } else {
                 phaseVocoder.setMode(multiPitchShift);
             }
@@ -266,21 +267,23 @@ void ofApp::update() {
             phaseVocoder.glitchAmount = glitchAmount;
             phaseVocoder.glitchIntensity = glitchIntensity;
             
-            if (ofRandom(1.0) > 0.75) {
-                feedbackAmount = 1.0  + progress * 2;
+            if (ofRandom(1.0) > 0.65) {
+                feedbackAmount = 1.0  + progress;
             }
             
-            if (ofRandom(1.0) < 0.05) {
+            if (ofRandom(1.0) < 0.1) {
                 feedbackAmount = 0;
             }
 
             float randomVocoderMore = ofRandom(1.0);
-            if (randomVocoderMore < 0.2) {
+            if (randomVocoderMore < 0.1) {
                 float pitchShiftDegree = floor(ofMap(glitchAmount, phaseFourMinDistortion, phaseFourMaxDistortion, 3, 24));
                 if (ofRandom(1.0) > 0.5) {pitchShiftDegree*= -1;}
                 pitchShiftDegree = ofClamp(pitchShiftDegree, -6, 18);
                 float pitchShfit = powf(2.0, (int)pitchShiftDegree / 12.0);
-            } else if (randomVocoderMore < 0.6) {
+                phaseVocoder.setMode(simplePitchShift);
+                phaseVocoder.setPitchShift(pitchShfit);
+            } else if (randomVocoderMore < 0.5) {
                 phaseVocoder.setMode(multiPitchShift);
             } else {
                 phaseVocoder.setMode(delaySpectrum);
@@ -304,7 +307,9 @@ void ofApp::update() {
             float progressToCalmGlitch = mapSquared(ellapsedTime, phaseFiveStart, phaseFiveStart + phaseFiveDuration, 1, 0);
             progressToCalmGlitch = ofClamp(progressToCalmGlitch, 0, 1);
             
-            glitchAmount = progressToCalmGlitch / 2.0;
+            
+            
+            glitchAmount = progressToCalmGlitch / 2.0 ;
             glitchIntensity = sqrt(progressToCalmGlitch) / 2.0;
             
             phaseVocoder.glitchAmount = glitchAmount;
@@ -403,11 +408,11 @@ void ofApp::draw() {
         string currPitch = "Pitch shift: " + to_string(phaseVocoder.pitchShift);
 
         ofSetColor(255, 255, 255);
-        ofDrawBitmapString(gfactorString, 50, 50);
-        ofDrawBitmapString(gfactorString2, 50, 65);
-        ofDrawBitmapString(gfactorString3, 50, 80);
-        ofDrawBitmapString(currstateString, 50, 95);
-        ofDrawBitmapString(currPitch, 50, 110);
+        ofDrawBitmapString(gfactorString, 400, 250);
+        ofDrawBitmapString(gfactorString2, 400, 265);
+        ofDrawBitmapString(gfactorString3, 400, 280);
+        ofDrawBitmapString(currstateString, 400, 295);
+        ofDrawBitmapString(currPitch, 400, 310);
     }
 
 //    int fft2Bins = 200;

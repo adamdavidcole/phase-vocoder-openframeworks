@@ -285,7 +285,24 @@ vec4 glitchColor() {
     //    GLITCH BEHAVIOR
     vec4 outputColor = vec4(0.0);
     float r = rand(vec2(rand(), rand()));
-
+    
+    // when glitch intensity is greater than one, prioritize color glitches
+    if (glitchIntensity > 1) {
+        if (r < 0.4 * glitchAmount) {
+            outputColor = rgbShift();
+        } else if (r < 0.8 * glitchAmount) {
+            outputColor = lightning();
+        } else if (r < 0.81 * glitchAmount) {
+            outputColor = full_noise();
+        } else if (r < 0.93 * glitchAmount) {
+            outputColor = small_blocks();
+        } else if (r < 1 * glitchAmount) {
+            outputColor = vertical_shift();
+        } else {
+            outputColor = texture2D(inputTexture, varyingtexcoord);
+        }
+    }
+    
     if (r < 0.3 * glitchAmount) {
         outputColor = rgbShift();
     } else if (r < 0.5 * glitchAmount) {
