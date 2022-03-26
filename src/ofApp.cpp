@@ -223,7 +223,7 @@ void ofApp::update() {
             phaseVocoder.glitchIntensity = glitchIntensity;
             
             if (ofRandom(1.0) > 0.75) {
-                feedbackAmount = progress * 5.0;
+                feedbackAmount = progress;
             }
             
             if (ofRandom(1.0) < 0.5) {
@@ -264,10 +264,10 @@ void ofApp::update() {
             phaseVocoder.glitchIntensity = glitchIntensity;
             
             if (ofRandom(1.0) > 0.75) {
-                feedbackAmount = 1.0;
+                feedbackAmount = 1.0  + progress * 2;
             }
             
-            if (ofRandom(1.0) < 0.1) {
+            if (ofRandom(1.0) < 0.05) {
                 feedbackAmount = 0;
             }
 
@@ -309,7 +309,7 @@ void ofApp::update() {
             phaseVocoderVolume = progressToCalmGlitch;
             
             phaseVocoder.setMode(simplePitchShift);
-            float pitchShiftDegree = floor(ofMap(progressToCalmGlitch, 1, 0.2, 6, 0));
+            float pitchShiftDegree = floor(ofMap(progressToCalmGlitch, 1, 0, 6, 0));
             pitchShiftDegree = ofClamp(pitchShiftDegree, 0, 1);
             float pitchShfit = powf(2.0, pitchShiftDegree / 12.0);
             phaseVocoder.setPitchShift(pitchShfit);
