@@ -37,7 +37,9 @@ With this infrastructure, I was able to explore several phase vocoder operations
 
 Overall, this experience taught me a lot about audio signal processing. I feel pretty comfortable with the real-time block based window processing, but still only have a high level understanding of how the phase unwrapping step works. I think further study will allow me to better understand what opportunities I have in the amplitude/phase domain.
 
-<video width="600" src="https://user-images.githubusercontent.com/5685294/160221473-f6d157a6-d70f-4b57-a2d5-e823c6c998f2.mp4">
+
+https://user-images.githubusercontent.com/5685294/160223037-8181db0e-d7e5-4af1-a83a-6a99e62515d6.mp4
+
 *Controlling pitch with mouse: white bins are the original signal, blue bins are the modified signal*
 
 ## Video Signal Processing
@@ -53,7 +55,11 @@ I was lucky to find several GLSL glitch shaders on github/shadertoy which gave m
 
 The result of this feedback loop was immediately exciting, creating trails as I moved around. It became even cooler when I started adding distortion and blending the results with the glitch code. I feel like I only breached the surface of what can be accomplished with a signal feedback model.
 
-<video width="600" src="https://user-images.githubusercontent.com/5685294/160222757-cf9c3ffd-9c0f-4c95-accd-bd7b153ce192.mp4">
+
+https://user-images.githubusercontent.com/5685294/160223034-8b5feee8-c421-4148-a4c4-f6096c035b46.mp4
+
+*Exploration with feedback and glitch blending*
+
 
 ## Bringing It All Together
 This project began mostly as a technical exploration, but in the back of my mind I was thinking I’d need to come up with a creative way to bring it all together. I recognized that I could parameterize the degree of distortion in both the audio and video signal and had a theory that it could be interesting to see those distortions slowly escalate until it felt like the bits in the screen/speaker were _exploding_.
