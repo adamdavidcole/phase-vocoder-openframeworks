@@ -5,6 +5,8 @@
 #include "ofxGui.h"
 #include "ofxShader.h"
 #include "ofxShaderFilter.h"
+#include "ofxVideoRecorder.h"
+
 #include "CircularBuffer.hpp"
 #include "PhaseVocoder.hpp"
 #include "DelayLine.hpp"
@@ -35,6 +37,9 @@ class ofApp : public ofBaseApp {
     void dragEvent(ofDragInfo dragInfo);
     void gotMessage(ofMessage msg);
     
+    void drawInstructions();
+    
+    
     AppState currState;
     float phaseStartTime;
     void beginRunningPhases();
@@ -43,6 +48,7 @@ class ofApp : public ofBaseApp {
     
     int bufferSize;
     int sampleRate;
+    int channels;
     
     int windowSize;
     int hopSize;
@@ -79,6 +85,8 @@ class ofApp : public ofBaseApp {
     ofTexture myTexture;
     ofImage feedbackImg;
     bool shouldClearFeedbackImg;
+    ofPixels feedbackPixels;
+
     
     ofPlanePrimitive plane;
     int planeWidth;
@@ -96,5 +104,19 @@ class ofApp : public ofBaseApp {
     void cleanRecording();
     bool hasCleanedRecording;
 //    DelayLine dl;
+    
+    // SCREEN RECORDING
+    ofVideoGrabber      vidGrabber;
+    ofxVideoRecorder    vidRecorder;
+    ofSoundStream       soundStream;
+    
+    bool bRecording;
+    string fileName;
+    string fileExt;
+
+    void recordingComplete(ofxVideoRecorderOutputFileCompleteEventArgs& args);
+
+    ofFbo recordFbo;
+    ofPixels recordPixels;
 };
 

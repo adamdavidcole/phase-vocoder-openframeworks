@@ -4,6 +4,8 @@
 #define DISABLE_VIDEO false
 #define DEBUG_MODE false
 #define DEBUG_PARAMETERS_WITH_MOUSE false
+#define ENABLE_VID_RECORDING false
+
 
 float mtofArray[] = {0, 8.661957, 9.177024, 9.722718, 10.3, 10.913383, 11.562325, 12.25, 12.978271, 13.75, 14.567617, 15.433853, 16.351599, 17.323914, 18.354048, 19.445436, 20.601723, 21.826765, 23.124651, 24.5, 25.956543, 27.5, 29.135235, 30.867706, 32.703197, 34.647827, 36.708096, 38.890873, 41.203445, 43.65353, 46.249302, 49., 51.913086, 55., 58.27047, 61.735413, 65.406395, 69.295654, 73.416191, 77.781746, 82.406891, 87.30706, 92.498604, 97.998856, 103.826172, 110., 116.540939, 123.470825, 130.81279, 138.591309, 146.832382, 155.563492, 164.813782, 174.61412, 184.997208, 195.997711, 207.652344, 220., 233.081879, 246.94165, 261.62558, 277.182617,293.664764, 311.126984, 329.627563, 349.228241, 369.994415, 391.995422, 415.304688, 440., 466.163757, 493.883301, 523.25116, 554.365234, 587.329529, 622.253967, 659.255127, 698.456482, 739.988831, 783.990845, 830.609375, 880., 932.327515, 987.766602, 1046.502319, 1108.730469, 1174.659058, 1244.507935, 1318.510254, 1396.912964, 1479.977661, 1567.981689, 1661.21875, 1760., 1864.655029, 1975.533203, 2093.004639, 2217.460938, 2349.318115, 2489.015869, 2637.020508, 2793.825928, 2959.955322, 3135.963379, 3322.4375, 3520., 3729.31, 3951.066406, 4186.009277, 4434.921875, 4698.63623, 4978.031738, 5274.041016, 5587.651855, 5919.910645, 6271.926758, 6644.875, 7040., 7458.620117, 7902.132812, 8372.018555, 8869.84375, 9397.272461, 9956.063477, 10548.082031, 11175.303711, 11839.821289, 12543.853516, 13289.75};
 
@@ -38,6 +40,7 @@ void ofApp::setup() {
 
     bufferSize = 512;
     sampleRate = 44100;
+    channels = 2;
     
     frequency = 430.66;
     
@@ -78,6 +81,7 @@ void ofApp::setup() {
         webcam.setup(camWidth, camHeight);
     
         pixelsToDraw.allocate(camWidth, camHeight, 3);
+        feedbackPixels.allocate(camWidth, camHeight, 3);
         myTexture.allocate (camWidth, camHeight, GL_RGB);
         
         float planeScale = 1;
@@ -104,6 +108,35 @@ void ofApp::setup() {
     }
     
     ofSetBackgroundColor(ofColor(255,255,255));
+    
+    ofSetFrameRate(60);
+    ofSetLogLevel(OF_LOG_VERBOSE);
+   
+    if (ENABLE_VID_RECORDING) {
+        vidRecorder.setFfmpegLocation("/opt/homebrew/Cellar/ffmpeg/4.4.1_5/bin/ffmpeg");
+        fileName = "testMovie";
+        fileExt = ".mov"; // ffmpeg uses the extension to determine the container type. run 'ffmpeg -formats' to see supported formats
+        vidRecorder.setVideoCodec("libx264");
+        vidRecorder.setVideoBitrate("1600k");
+        vidRecorder.setAudioCodec("mp3");
+        vidRecorder.setAudioBitrate("192k");
+        
+        ofAddListener(vidRecorder.outputFileCompleteEvent, this, &ofApp::recordingComplete);
+        
+        bRecording = false;
+        ofEnableAlphaBlending();
+    }
+}
+
+
+//--------------------------------------------------------------
+void ofApp::exit(){
+    if (ENABLE_VID_RECORDING) {
+        ofRemoveListener(vidRecorder.outputFileCompleteEvent, this, &ofApp::recordingComplete);
+        vidRecorder.close();
+    }
+    
+    ofSoundStreamClose();
 }
 
 //--------------------------------------------------------------
@@ -136,6 +169,7 @@ void ofApp::update() {
                 feedbackImg.update();
             }
 
+            
             myTexture.loadData(pixelsToDraw);
         }
         
@@ -143,8 +177,38 @@ void ofApp::update() {
             int x = planeX;
             int y = planeY;
             feedbackImg.grabScreen(x, y, planeWidth, planeHeight);
+            
+//            ofPixels feedbackImgPixels = feedbackImg.getPixels();
+            
+            
+        }
+        
+        if (ENABLE_VID_RECORDING) {
+            if (bRecording) {
+                for (int y = 0; y < camHeight; y++) {
+                    for (int x = 0; x < camWidth; x++) {
+                        int shift = ofMap(mouseX, 0, ofGetWidth(), -200, 200);
+                        ofColor currColor = feedbackImg.getColor(x, y);
+                        feedbackPixels.setColor(x, y, currColor);
+                    }
+                }
+                bool success = vidRecorder.addFrame(feedbackPixels);
+                if (!success) {
+                    ofLogWarning("This frame was not added!");
+                }
+                // Check if the video recorder encountered any error while writing video frame
+                // or audio smaples.
+                if (vidRecorder.hasVideoError()) {
+                    ofLogWarning("The video recorder failed to write some frames!");
+                }
+
+                if (vidRecorder.hasAudioError()) {
+                    ofLogWarning("The video recorder failed to write some audio samples!");
+                }
+            }
         }
     }
+    
     
     float ellapsedTime = ofGetElapsedTimef() - phaseStartTime;
     if (isRunningPhases()) {
@@ -160,8 +224,8 @@ void ofApp::update() {
         } else if (ellapsedTime < 50) {
             // highest intensity glitching: 5 seconds
             currState = AppState::RUNNING_PHASE_FOUR;
-        } else if (ellapsedTime < 60) {
-            // calm down: 10 seconds
+        } else if (ellapsedTime < 63) {
+            // calm down: 10 seconds + 3 seconds to bring back instructions
             currState = AppState::RUNNING_PHASE_FIVE;
         }  else {
             // TODO: reset state
@@ -398,6 +462,10 @@ void ofApp::draw() {
         shader.end();
     }
     
+    if (currState == AppState::IDLE) {
+        drawInstructions();
+    }
+    
     if (DEBUG_MODE) {
         string gfactorString = "Glitch amount: " + to_string(glitchAmount);
         string gfactorString2 = "Glitch intensity: " + to_string(glitchIntensity);
@@ -413,6 +481,7 @@ void ofApp::draw() {
         ofDrawBitmapString(currstateString, 400, 295);
         ofDrawBitmapString(currPitch, 400, 310);
     }
+    
 
 //    int fft2Bins = 200;
 //    float bandWidth = ofGetWidth()/ (float)fft2Bins;
@@ -447,9 +516,16 @@ void ofApp::draw() {
 //    }
 }
 
-//--------------------------------------------------------------
-void ofApp::exit() {
-    ofSoundStreamClose();
+void ofApp::drawInstructions() {
+    static int instructionsRectWidth = 420;
+    static int instructionsRectHeight = instructionsRectWidth * camHeight/camWidth/2;
+    static int instructionsRectX =  (ofGetWidth() - instructionsRectWidth) / 2;
+    static int instructionsRectY = (ofGetHeight() - instructionsRectHeight) / 2;
+    
+    ofSetColor(30, 30, 30, 150);
+    ofDrawRectangle(instructionsRectX, instructionsRectY, instructionsRectWidth, instructionsRectHeight);
+    ofSetColor(255, 255, 255);
+    ofDrawBitmapString("Please, press the spacebar and tell me the time.", instructionsRectX + 20, instructionsRectHeight/2 + instructionsRectY);
 }
 
 //--------------------------------------------------------------
@@ -469,6 +545,12 @@ void ofApp::audioIn(float* buffer, int bufferSize, int nChannels) {
 
 //--------------------------------------------------------------
 void ofApp::audioOut(float* buffer, int bufferSize, int nChannels) {
+    if (ENABLE_VID_RECORDING) {
+        if(bRecording) {
+                vidRecorder.addAudioSamples(buffer, bufferSize, nChannels);
+        }
+    }
+    
     for (int i = 0; i < bufferSize; i++) {
         float sample = 0;
 
@@ -504,6 +586,11 @@ void ofApp::audioOut(float* buffer, int bufferSize, int nChannels) {
         buffer[i * nChannels + 0] = currentSample;
         buffer[i * nChannels + 1] = currentSample;
     }
+}
+
+//--------------------------------------------------------------
+void ofApp::recordingComplete(ofxVideoRecorderOutputFileCompleteEventArgs& args){
+    cout << "The recoded video file is now complete." << endl;
 }
 
 //--------------------------------------------------------------
@@ -578,6 +665,31 @@ void ofApp::keyReleased(int key) {
     
     if (key == 'c') {
         shouldClearFeedbackImg = false;
+    }
+    
+    if (ENABLE_VID_RECORDING) {
+        if(key=='r'){
+            bRecording = !bRecording;
+            if(bRecording && !vidRecorder.isInitialized()) {
+                vidRecorder.setup(fileName+ofGetTimestampString()+fileExt, feedbackImg.getWidth(), feedbackImg.getHeight(), 60, sampleRate, channels);
+    //          vidRecorder.setup(fileName+ofGetTimestampString()+fileExt, vidGrabber.getWidth(), vidGrabber.getHeight(), 30); // no audio
+    //            vidRecorder.setup(fileName+ofGetTimestampString()+fileExt, 0,0,0, sampleRate, channels); // no video
+    //          vidRecorder.setupCustomOutput(vidGrabber.getWidth(), vidGrabber.getHeight(), 30, sampleRate, channels, "-vcodec mpeg4 -b 1600k -acodec mp2 -ab 128k -f mpegts udp://localhost:1234"); // for custom ffmpeg output string (streaming, etc)
+
+                // Start recording
+                vidRecorder.start();
+            }
+            else if(!bRecording && vidRecorder.isInitialized()) {
+                vidRecorder.setPaused(true);
+            }
+            else if(bRecording && vidRecorder.isInitialized()) {
+                vidRecorder.setPaused(false);
+            }
+        }
+        if(key=='e'){
+            bRecording = false;
+            vidRecorder.close();
+        }
     }
 }
 
