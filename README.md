@@ -12,7 +12,8 @@ This project was built using openFrameworks and consisted of three major stages/
 2. Video signal processing using GLSL and video feedback
 3. Bringing those two technical explorations together in a unified aesthetic whole
   
-INSERT_FINAL_PROJECT_VIDEO
+[![Watch the video](https://user-images.githubusercontent.com/5685294/160303236-9ef81f67-5f0c-41ef-91e7-0d5e29ef2248.png)](https://vimeo.com/692883126)
+*https://vimeo.com/692883126*
 
 
 ## Audio Signal Processing
